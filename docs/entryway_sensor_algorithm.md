@@ -1,7 +1,7 @@
 # Algorithm for Entryway Sensor 
 --------------------------------
 
-```
+```javascript
 /**
  * processFrame()
  * 
