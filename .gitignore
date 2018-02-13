@@ -1,0 +1,5 @@
+.vscode/
+
+# Python Things
+__pycache__/
+*.egg-info/
