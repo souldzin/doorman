@@ -1,0 +1,16 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+
+"0dd9f41" = {path = "../doorman-ir-utils", editable = true}
+
+
+[dev-packages]
+
+tox = "*"
+pytest = "*"
