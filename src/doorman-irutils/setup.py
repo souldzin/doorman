@@ -2,6 +2,6 @@
 
 from distutils.core import setup
 
-setup(name='doorman-ir-sensor-utils',
+setup(name='doorman-irutils',
       version='1.0',
-      packages=['doorman.ir_utils'])
+      packages=['doorman.irutils'])
