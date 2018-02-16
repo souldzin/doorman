@@ -8,9 +8,10 @@ name = "pypi"
 [packages]
 
 "111ba9d" = {path = "../doorman-irutils/", editable = true}
+"e1839a8" = {path = ".", editable = true}
+rx = "*"
 
 
 [dev-packages]
 
-tox = "*"
 pytest = "*"
