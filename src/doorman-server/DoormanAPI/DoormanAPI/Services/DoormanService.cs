@@ -32,10 +32,36 @@ namespace DoormanAPI.Services
 
 				return dbModel.RoomOccupancySnapshotId;
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
 				return null;
 			}
+		}
+
+		RoomOccupancySnapshotResultsVM IDoormanService.GetRoomOccupancySnapshotById(int roomOccupancySnapshotId)
+		{
+			try
+			{
+				var dbModel =
+					_context.RoomOccupancySnapshots.SingleOrDefault(x => x.RoomOccupancySnapshotId == roomOccupancySnapshotId);
+
+				if (dbModel == null)
+				{
+					return null;
+				}
+
+				return Mapper.Map<RoomOccupancySnapshot, RoomOccupancySnapshotResultsVM>(dbModel);
+
+			}
+			catch (Exception ex)
+			{
+				return null;
+			}
+		}
+
+		IReadOnlyList<RoomOccupancySnapshotResultsVM> IDoormanService.GetAll()
+		{
+			return Mapper.Map<IReadOnlyList<RoomOccupancySnapshotResultsVM>>(_context.RoomOccupancySnapshots.ToList());
 		}
 	}
 
@@ -43,5 +69,7 @@ namespace DoormanAPI.Services
 	{
 		IReadOnlyList<RoomVM> GetRooms();
 		int? SaveRoomOccupancySnapshot(RoomOccupancySnapshotVM model);
+		IReadOnlyList<RoomOccupancySnapshotResultsVM> GetAll();
+		RoomOccupancySnapshotResultsVM GetRoomOccupancySnapshotById(int roomOccupancySnapshotId);
 	}
 }

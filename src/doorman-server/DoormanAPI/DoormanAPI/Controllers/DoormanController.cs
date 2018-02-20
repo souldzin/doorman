@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DoormanAPI.Controllers
 {
-    [Route("api/doorman")]
+    [Route("api/doorman/")]
     public class DoormanController : Controller
     {
 	    private readonly IDoormanService _doormanService;
@@ -32,18 +32,32 @@ namespace DoormanAPI.Controllers
 	        }
         }
 
-	    [HttpGet("snapshot/{snapId}", Name = "GetRoomSnapshot")]
-	    public IActionResult GetRoomSnapshot([FromQuery] int snapId)
+	    [HttpGet("{snapId}", Name = "GetRoomSnapshot")]
+	    public IActionResult GetRoomSnapshot(int snapId)
 	    {
 		    try
 		    {
-			    var result = _doormanService.GetRooms();
+			    var result = _doormanService.GetRoomOccupancySnapshotById(snapId);
+
+			    if (result == null)
+			    {
+				    return NotFound();
+			    }
+
 			    return Ok(result);
 		    }
 		    catch (Exception ex)
 		    {
 			    return StatusCode(500, "A problem happening while handling your request");
 		    }
+	    }
+
+	    [HttpGet]
+	    public IActionResult Get()
+	    {
+		    var result = _doormanService.GetAll();
+		   
+		    return Ok(result);
 	    }
 
 		[HttpPost]
@@ -60,7 +74,7 @@ namespace DoormanAPI.Controllers
 		        NotFound();
 	        }
 
-	        return CreatedAtAction("GetRoomSnapshot", new {snapId = result});
+	        return CreatedAtAction("GetRoomSnapshot", new {snapId = result}, null);
         }
     }
 }
