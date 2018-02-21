@@ -1,14 +1,16 @@
+# Visual studio and C# things...
 *.user
 *.suo
-bin
-Bin
-obj
-Obj
-/.vs/
+bin/
+Bin/
+obj/
+Obj/
+.vs/
 *.vs
 *resharper*
 .DS_Store
 *.sassc
 *.scssc
 .sass-cache
-packages
+
+packages/
