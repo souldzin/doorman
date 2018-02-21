@@ -14,3 +14,11 @@ Obj/
 .sass-cache
 
 packages/
+
+# Visual Studio Code things...
+.vscode/
+
+# Python things...
+__pycache__/
+*.egg-info/
+.pytest_cache/
