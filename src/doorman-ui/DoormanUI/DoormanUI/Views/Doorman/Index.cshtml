@@ -1,5 +1,40 @@
 ﻿@page
 @{
 }
+<head>
+	<title>@ViewBag.Title</title>
+	<script src="js/signalr-client.js" asp-append-version="true"></script>
+	<script src="js/jquery-3.3.1.min.js"></script>
+</head>
+<body>
 <h1>Doorman Coming Soon!</h1>
-<h2>The time on the server is @DateTime.Now</h2>
+<h2>The time on the server is @DateTime.Now</h2><br/>
+<h2>How many students are in the room <span class="x-room-counter" style="color: red;font-style: italic">0</span></h2>
+</body>
+<script type="text/javascript">
+	
+	$(function () {
+
+		var url = "http://doormanapi20180217051526.azurewebsites.net/doorman";
+		var transportType = signalR.TransportType.WebSockets; //can also be ServerSentEvents or LongPolling
+		var logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
+		var doormanHub =
+			new signalR.HttpConnection(url, { transport: transportType, logger: logger });
+		var doormanConnection = new signalR.HubConnection(doormanHub, logger);
+
+		doormanConnection.onClosed = e => {
+			console.log('connection closed');
+		};
+
+		doormanConnection.on('Broadcast',
+			(message) => {
+				console.log(message);
+				$('.x-room-counter').text(message.count);
+				console.log('received message');
+			});
+
+		doormanConnection.start().catch(err => {
+			console.log(err + 'connection error');
+		});
+	});
+</script>

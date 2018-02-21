@@ -22,7 +22,7 @@ namespace DoormanAPI.Services
 			return Mapper.Map<IReadOnlyList<RoomVM>>(_context.Rooms.ToList());
 		}
 
-		int? IDoormanService.SaveRoomOccupancySnapshot(RoomOccupancySnapshotVM model)
+		RoomOccupancySnapshotResultsVM IDoormanService.SaveRoomOccupancySnapshot(RoomOccupancySnapshotVM model)
 		{
 			try
 			{
@@ -30,7 +30,7 @@ namespace DoormanAPI.Services
 				_context.RoomOccupancySnapshots.Add(dbModel);
 				_context.SaveChanges();
 
-				return dbModel.RoomOccupancySnapshotId;
+				return Mapper.Map<RoomOccupancySnapshot, RoomOccupancySnapshotResultsVM>(dbModel);
 			}
 			catch (Exception ex)
 			{
@@ -68,7 +68,7 @@ namespace DoormanAPI.Services
 	public interface IDoormanService
 	{
 		IReadOnlyList<RoomVM> GetRooms();
-		int? SaveRoomOccupancySnapshot(RoomOccupancySnapshotVM model);
+		RoomOccupancySnapshotResultsVM SaveRoomOccupancySnapshot(RoomOccupancySnapshotVM model);
 		IReadOnlyList<RoomOccupancySnapshotResultsVM> GetAll();
 		RoomOccupancySnapshotResultsVM GetRoomOccupancySnapshotById(int roomOccupancySnapshotId);
 	}

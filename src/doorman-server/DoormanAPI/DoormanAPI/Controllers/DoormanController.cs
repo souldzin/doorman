@@ -2,23 +2,27 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DoormanAPI.Hub;
 using DoormanAPI.Models;
 using DoormanAPI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace DoormanAPI.Controllers
 {
     [Route("api/doorman/")]
     public class DoormanController : Controller
     {
-	    private readonly IDoormanService _doormanService;
+	    private readonly IHubContext<DoormanHub> _context;
+		private readonly IDoormanService _doormanService;
 
-	    public DoormanController(IDoormanService doormanService)
+	    public DoormanController(IDoormanService doormanService, IHubContext<DoormanHub> context)
 	    {
 		    _doormanService = doormanService;
+		    _context = context;
 	    }
 
-		[HttpGet("rooms", Name = "GetRooms")]
+	    [HttpGet("rooms", Name = "GetRooms")]
         public IActionResult GetRooms()
         {
 	        try
@@ -69,12 +73,16 @@ namespace DoormanAPI.Controllers
 	        }
 
 	        var result = _doormanService.SaveRoomOccupancySnapshot(model);
+
 	        if (result == null)
 	        {
-		        NotFound();
+		        return NotFound();
 	        }
 
-	        return CreatedAtAction("GetRoomSnapshot", new {snapId = result}, null);
+			//Components for providing real-time bi-directional communication across the Web
+			_context.Clients.All.InvokeAsync("Broadcast", result);
+
+	        return CreatedAtAction("GetRoomSnapshot", new {snapId = result.RoomOccupancySnapshotId}, null);
         }
     }
 }
