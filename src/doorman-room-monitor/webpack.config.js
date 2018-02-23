@@ -9,11 +9,11 @@ module.exports = {
     module: {
         loaders: [
             {
-                test: /client-config(\..*)?.js$/,
+                test: /client.config(\..*)?.js$/,
                 use: {
                     loader: 'file-loader',
                     options: {
-                        name: "client-config.[ext]"
+                        name: "client.config.[ext]"
                     }
                 }
             },
