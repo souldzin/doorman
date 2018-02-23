@@ -1,0 +1,36 @@
+﻿@model Doorman.Web.Models.HistoricData
+
+<style>
+    .data-label{
+        font-weight:bold;
+        font-size:18px;
+        margin:0 10px 20px 0;
+    }
+    .data-general{
+        font-weight:bold;
+        font-size:18px;
+        color:green;
+    }
+</style>
+<div>
+    <div>
+        <span class="data-label">Daily Avg:</span>
+        <span class="data-general">@Model.DailyAvg</span>
+    </div>
+    <div>
+        <span class="data-label">Daily Stdev:</span>
+        <span class="data-general">@Model.DailyStdev</span>
+    </div>
+    <div>
+        <span class="data-label">Max:</span>
+        <span class="data-general">@Model.DailyMax</span>
+    </div>
+    <div>
+        <span class="data-label">Peak Weekday:</span>
+        <span class="data-general">@Model.PeakWeekDay</span>
+    </div>
+    <div>
+        <span class="data-label">Peak Time</span>
+        <span class="data-general">@Model.PeakTime</span>
+    </div>
+</div>

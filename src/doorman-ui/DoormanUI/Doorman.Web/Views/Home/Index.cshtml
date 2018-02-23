@@ -1,0 +1,29 @@
+﻿@{
+    ViewBag.Title = "Real Time";
+}
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+
+<style>
+    .info-box {
+        margin:0 0 15px;
+        text-align:center;
+    }
+</style>
+<script src="~/Scripts/realtime/realtimejs.js?v=1"></script>
+
+<div class="panel panel-title info-box">
+    <div class="panel-body">
+        <h3>Current Occupancy</h3>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-2" style="margin:0 auto; float:none">
+        <div class="panel panel-title info-box">
+            <div class="panel-body">
+                <h1 class="occupancy-size"></h1>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="realtime-chart"></div>
