@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev:client": "webpack-dev-server --content-base dist/public --hot",
+    "dev:client": "webpack-dev-server --hot",
     "build:client": "webpack"
   },
   "dependencies": {
