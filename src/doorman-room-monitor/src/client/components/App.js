@@ -2,11 +2,7 @@ import React from "react";
 
 import CountDisplay from "./CountDisplay";
 import {FrameDisplay} from "./Frame";
-
-function getRandomFrame() {
-    return Array(64).fill(0).map(() => Math.floor(Math.random() * 30 + 15));
-
-}
+import io from "socket.io-client";
 
 class App extends React.Component {
     constructor(props) {
@@ -14,8 +10,28 @@ class App extends React.Component {
 
         this.state = {
             count: 11,
-            frame: getRandomFrame()
+            frame: []
         };
+    }
+
+    componentWillMount() {
+        this._connectToSocket();
+    }
+
+    componentWillUnmount() {
+
+    }
+
+    _connectToSocket() {
+        const socket = io(this.props.apiUrl);
+
+        socket.on('frame', (frame) => {
+            this.setState({
+                frame                
+            })
+        });
+
+        this._socket = socket;
     }
 
     render() {

@@ -8,6 +8,7 @@
   "private": true,
   "scripts": {
     "dev:client": "webpack-dev-server --hot",
+    "dev:server": "nodemon src/server/index.js 9080",
     "build:client": "webpack"
   },
   "dependencies": {

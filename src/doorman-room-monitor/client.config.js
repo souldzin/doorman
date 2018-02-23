@@ -1,3 +1,3 @@
 var DOORMAN_CONFIG = {
-    "API_URL": "http://localhost:9000"
+    "API_URL": "http://localhost:9080"
 };
