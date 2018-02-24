@@ -1,8 +1,8 @@
 import React from "react";
 import tinycolor from "tinycolor2";
 
-const VALUE_LOW = 20;
-const VALUE_RANGE = 20;
+const VALUE_LOW = 22;
+const VALUE_RANGE = 18;
 // VALUE_HIGH = VALUE_LOW + VALUE_RANGE
 
 function getFrame(props) {

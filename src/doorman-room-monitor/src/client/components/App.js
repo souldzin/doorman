@@ -9,7 +9,7 @@ class App extends React.Component {
         super(props);
 
         this.state = {
-            count: 11,
+            count: 0,
             frame: []
         };
     }
@@ -39,11 +39,23 @@ class App extends React.Component {
 
         return (
             <div className="home">
-                <div className="home-item big-text">
-                    <CountDisplay count={count} />
+                <div className="home-item">
+                    <h1>Occupancy</h1>
+                    <div className="big-text">
+                        <CountDisplay count={count} />
+                    </div>
                 </div>
                 <div className="home-item">
+                    <h1>Entryway Sensor 1</h1>
                     <FrameDisplay frame={frame} />
+                </div>
+                <div className="home-item">
+                    <h1>Entryway Sensor 2</h1>
+                    <FrameDisplay />
+                </div>
+                <div className="home-item">
+                    <h1>Displacement Sensor</h1>
+                    <FrameDisplay />
                 </div>
             </div>
         );

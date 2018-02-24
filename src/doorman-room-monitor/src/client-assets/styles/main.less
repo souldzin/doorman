@@ -29,9 +29,9 @@ body {
 
 .home {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
-    height: 100%;
+    flex-wrap: wrap;
 }
 
 .home-item {
@@ -39,4 +39,8 @@ body {
     width: 50%;
     box-sizing: border-box;
     text-align: center;
+
+    @media(max-width: 840px) {
+        width: 100%;
+    }
 }

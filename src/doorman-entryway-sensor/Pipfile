@@ -7,9 +7,10 @@ name = "pypi"
 
 [packages]
 
-"111ba9d" = {path = "../doorman-irutils/", editable = true}
 "e1839a8" = {path = ".", editable = true}
 rx = "*"
+requests = "*"
+"adafruit-amg88xx" = "*"
 
 
 [dev-packages]
