@@ -29,7 +29,8 @@ function main() {
     // setup context 
     //   - this is used to inject dependencies to services
     const ctx = {
-        monitor: monitor
+        monitor,
+        io
     };
 
     // setup express app

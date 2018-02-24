@@ -1,22 +1,16 @@
 const express = require('express');
 
-module.exports = function setupSensorRouter({ monitor }) {
+module.exports = function setupSensorRouter({ monitor, io }) {
     const router = express.Router();
 
     router.post("/frame", (req, res) => {
         const data = req.body || {};
 
-        return monitor.pushFrame(data.frame)
-            .then((x) => {
-                res.send({})
-            })
-            .catch((e) => {
-                res.status(400)
-                    .json({
-                        error: e
-                    })
-                    .end();
-            });
+        if(data.frame) {
+            io.emit('frame', data.frame);
+        }
+
+        res.send({});
     });
 
     router.post("/event", (req, res) => {

@@ -9,6 +9,7 @@ class App extends React.Component {
         super(props);
 
         this.state = {
+            isLoading: true,
             count: 0,
             frame: []
         };
@@ -25,9 +26,15 @@ class App extends React.Component {
     _connectToSocket() {
         const socket = io(this.props.apiUrl);
 
-        socket.on('state', ({ count, frame }) => {
+        socket.on('state', ({ count }) => {
             this.setState({
-                count,
+                isLoading: false,
+                count
+            });
+        });
+
+        socket.on('frame', (frame) => {
+            this.setState({
                 frame
             });
         });
@@ -36,7 +43,11 @@ class App extends React.Component {
     }
 
     render() {
-        const {count, frame} = this.state;
+        const {isLoading, count, frame} = this.state;
+
+        if(isLoading) {
+            return <div></div>
+        }
 
         return (
             <div className="home">

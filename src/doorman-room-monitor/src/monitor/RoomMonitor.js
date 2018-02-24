@@ -7,7 +7,6 @@ class RoomMonitor {
     constructor() {
         const state = {
             count: 0,
-            frame: [],
             event: null
         };
 
@@ -25,26 +24,6 @@ class RoomMonitor {
 
     getState() {
         return this._subject$.getValue();
-    }
-
-    pushFrame(frame) {
-        return this._validateFrame(frame)
-            .then((frame) => {
-                this._action$.next(state => ({
-                    ...state,
-                    frame: frame
-                }));
-            });
-    }
-
-    _validateFrame(frame) {
-        if(!frame || !Array.isArray(frame)) {
-            return Promise.reject({
-                message: "Expected frame to be an array. Found: " + frame.toString()
-            });
-        } else {
-            return Promise.resolve(frame);
-        }
     }
 
     pushRoomEvent(event) {
