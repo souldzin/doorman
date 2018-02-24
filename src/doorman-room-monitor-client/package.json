@@ -1,23 +1,18 @@
 {
-  "name": "doorman-room-monitor",
+  "name": "doorman-room-monitor-client",
   "version": "1.0.0",
-  "description": "The room monitor server for Doorman system",
+  "description": "The room monitor dev client for the room monitor server",
   "main": "lib/index.js",
   "repository": "https://gitlab.com/emse-b/doorman",
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev:client": "webpack-dev-server --hot",
-    "dev:server": "nodemon src/server/index.js 9080",
-    "start:server": "node src/server/index.js 9080",
-    "build:client": "webpack"
+    "dev": "webpack-dev-server --hot",
+    "build": "webpack"
   },
   "dependencies": {
-    "body-parser": "^1.18.2",
-    "express": "4.16.2",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
-    "rxjs": "^5.5.6",
     "socket.io": "2.0.4",
     "tinycolor2": "^1.4.1"
   },
@@ -31,7 +26,6 @@
     "file-loader": "^1.1.9",
     "less": "^3.0.1",
     "less-loader": "^4.0.5",
-    "nodemon": "1.15.1",
     "webpack": "^3.11.0",
     "webpack-dev-server": "^2.11.1"
   }

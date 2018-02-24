@@ -9,7 +9,6 @@ class App extends React.Component {
         super(props);
 
         this.state = {
-            isLoading: true,
             count: 0,
             frame: []
         };
@@ -28,7 +27,6 @@ class App extends React.Component {
 
         socket.on('state', ({ count }) => {
             this.setState({
-                isLoading: false,
                 count
             });
         });
@@ -43,11 +41,7 @@ class App extends React.Component {
     }
 
     render() {
-        const {isLoading, count, frame} = this.state;
-
-        if(isLoading) {
-            return <div></div>
-        }
+        const {count, frame} = this.state;
 
         return (
             <div className="home">
