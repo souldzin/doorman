@@ -17,6 +17,7 @@
     "express": "4.16.2",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
+    "rxjs": "^5.5.6",
     "socket.io": "2.0.4",
     "tinycolor2": "^1.4.1"
   },

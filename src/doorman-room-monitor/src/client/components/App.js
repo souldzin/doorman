@@ -25,10 +25,11 @@ class App extends React.Component {
     _connectToSocket() {
         const socket = io(this.props.apiUrl);
 
-        socket.on('frame', (frame) => {
+        socket.on('state', ({ count, frame }) => {
             this.setState({
-                frame                
-            })
+                count,
+                frame
+            });
         });
 
         this._socket = socket;

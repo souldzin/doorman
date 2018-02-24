@@ -1,25 +1,39 @@
 const express = require('express');
 
-function setupRouter(io) {
+module.exports = function setupSensorRouter({ monitor }) {
     const router = express.Router();
 
     router.post("/frame", (req, res) => {
         const data = req.body || {};
 
-        // what if this isn't an array guys...
-        if(!data.frame || !Array.isArray(data.frame)) {
-            res.send({
-                message: "Expected 'frame' in data"
+        return monitor.pushFrame(data.frame)
+            .then((x) => {
+                res.send({})
+            })
+            .catch((e) => {
+                res.status(400)
+                    .json({
+                        error: e
+                    })
+                    .end();
             });
-            res.sendStatus(400);
-            return;
-        }
+    });
 
-        io.emit("frame", data.frame);
-        res.send({});
+    router.post("/event", (req, res) => {
+        const data = req.body || {};
+
+        return monitor.pushRoomEvent(data)
+            .then((x) => {
+                res.send({});
+            })
+            .catch((e) => {
+                res.status(400)
+                    .json({
+                        error: e
+                    })
+                    .end();
+            });
     });
 
     return router;
 }
-
-module.exports = setupRouter;
