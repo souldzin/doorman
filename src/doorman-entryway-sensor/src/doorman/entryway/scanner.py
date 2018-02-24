@@ -23,7 +23,7 @@ def get_next_state(state, next_zone):
     }
 
 def get_zone(frame):
-    print("{0} vs {1}".format(value, BOUNDARY))
+    value = sum(frame)
     return "low" if value < BOUNDARY else "high"
 
 def scan_frames(frames):
