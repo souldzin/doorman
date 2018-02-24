@@ -6,6 +6,7 @@ from rx.core import Scheduler
 from doorman.entryway.sensor import get_sensor
 from doorman.entryway.sensor import TYPE_REAL
 from doorman.entryway.monitor_client import MonitorClient
+from doorman.entryway.scanner import scan_frames
 
 def print_usage():
     print(
@@ -50,11 +51,20 @@ def main():
 
     frames = Observable.timer(100, period=100, scheduler=scheduler) \
         .map(lambda x: sensor.get_frame()) \
-        .observe_on(Scheduler.event_loop)
 
-    frames.subscribe(
+    events = scan_frames(frames)
+
+    print("subscribing to events...")
+    events.subscribe(
+        on_next = lambda x: client.post_event(x['type'], x['delta']),
+        on_completed = lambda: log("completed"),
+        on_error = lambda e: log("Unexpected error occurred {0}".format(e))
+    )
+
+    print("subscribing to frames...")
+    frames.observe_on(Scheduler.event_loop).subscribe(
         on_next = lambda x: client.post_frame(x),
-        on_completed = lambda x: log("completed"),
+        on_completed = lambda: log("completed"),
         on_error = lambda e: log("Unexpected error occurred {0}".format(e))
     )
 
