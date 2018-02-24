@@ -1,0 +1,72 @@
+﻿@{
+    ViewBag.Title = "Historic";
+}
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="~/Scripts/historic/historicJS.js?v=1"></script>
+<style>
+    .same-line * {
+        display: inline-block;
+        vertical-align: baseline;
+    }
+
+    #start-date {
+        margin: 0 0 15px 10px;
+    }
+
+    #end-date {
+        margin-left: 15px;
+    }
+
+    .historic-date-box {
+        /*float:right;*/
+    }
+
+    #filter {
+        margin: 15px 0 15px 0;
+        /*float: right;*/
+    }
+
+    .historic-chart-btn {
+        margin: 9px 0 9px 0;
+    }
+
+    .historic-chart-box {
+        clear: both;
+    }
+
+    .btn {
+        width: 100%;
+    }
+</style>
+<h2>@ViewBag.Title</h2>
+<div class="row" style="margin-bottom:15px;">
+    <div class="col-sm-4">
+        <div class="panel panel-title">
+            <div class="panel-body historic-data-box"></div>
+        </div>
+    </div>
+    <div class="historic-date-box col-sm-8">
+        <div class="panel panel-title">
+            <div class="panel-body">
+                <div class="same-line">
+                    <label for="start-date">Start Date:</label>
+                    <input type="date" class="form-control" id="start-date" />
+                </div>
+                <div class="same-line">
+                    <label for="end-date">End Date:</label>
+                    <input type="date" class="form-control" id="end-date" />
+                </div>
+                <div class="btn btn-success" id="filter">Filter</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="historic-chart-box row">
+    <div class="col-sm-2" style="border-right: 1px solid lightgray;">
+        <div class="btn btn-success historic-chart-btn" data-id="1" data-title="Daily Average Occupancy">Daily Avg</div>
+        <div class="btn btn-info historic-chart-btn" data-id="2" data-title="Daily Standard Deviation Occupancy">Daily Stdev</div>
+        <div class="btn btn-primary historic-chart-btn" data-id="3" data-title="Daily Max Occupancy">Daily Max</div>
+    </div>
+    <div id="historic-chart" class="col-sm-10"></div>
+</div>
