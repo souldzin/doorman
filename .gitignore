@@ -22,3 +22,7 @@ packages/
 __pycache__/
 *.egg-info/
 .pytest_cache/
+
+# Nodejs things...
+node_modules/
+dist/
