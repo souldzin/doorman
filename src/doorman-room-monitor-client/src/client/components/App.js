@@ -25,7 +25,15 @@ class App extends React.Component {
     _connectToSocket() {
         const socket = io(this.props.apiUrl);
 
-        socket.on('state', ({ count }) => {
+        socket.on('connect', function(e){
+            socket.emit('ready', 'I am ready!');
+        });
+
+        socket.on('state', (state) => {
+            if(!state) {
+                return;
+            }
+            const {count} = state;
             this.setState({
                 count
             });

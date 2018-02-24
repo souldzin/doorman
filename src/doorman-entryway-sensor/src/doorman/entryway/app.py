@@ -1,8 +1,11 @@
 import sys
-import requests
 import time
+from rx import Observable
+from rx.concurrency import ThreadPoolScheduler
+from rx.core import Scheduler
 from doorman.entryway.sensor import get_sensor
 from doorman.entryway.sensor import TYPE_REAL
+from doorman.entryway.monitor_client import MonitorClient
 
 def print_usage():
     print(
@@ -41,10 +44,21 @@ def main():
 
     print("Starting '{0}' sensor...".format(arg_sensor_type))
     sensor = get_sensor(arg_sensor_type)
+    client = MonitorClient(arg_endpoint)
 
-    while True:
-        frame = sensor.get_frame()
-        post_frame(frame, arg_endpoint)
+    scheduler = ThreadPoolScheduler(2)
+
+    frames = Observable.timer(100, period=100, scheduler=scheduler) \
+        .map(lambda x: sensor.get_frame()) \
+        .observe_on(Scheduler.event_loop)
+
+    frames.subscribe(
+        on_next = lambda x: client.post_frame(x),
+        on_completed = lambda x: log("completed"),
+        on_error = lambda e: log("Unexpected error occurred {0}".format(e))
+    )
+
+    scheduler.executor.shutdown()
 
 if __name__ == '__main__':
     main()

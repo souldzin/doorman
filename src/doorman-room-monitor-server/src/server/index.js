@@ -19,11 +19,13 @@ function main() {
     // setup socket.io
     // 
     io.on('connection', (socket) => { 
-        emitState(socket, ctx.monitor.getState());
+        socket.on('ready', function(){
+            socket.emit('state', ctx.monitor.getState());
+        });
     });
 
     monitor.state$.subscribe((state) => {
-        emitState(io, state);
+        io.emit('state', state);
     });
 
     // setup context 
@@ -43,8 +45,4 @@ function main() {
     server.listen(port, () => {
         console.log(`doorman-room-monitor listening on port ${port}.`);
     });
-}
-
-function emitState(socket, state) {
-    socket.emit('state', state);
 }

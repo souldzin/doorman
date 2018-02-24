@@ -17,7 +17,7 @@ class RoomMonitor {
             .scan((currentState, action) => action(currentState), state);
 
         // subscribe to behavior subject so that we can get the value in getState()
-        state$.subscribe(this._subject$);
+        state$.startWith(state).subscribe(this._subject$);
 
         this.state$ = state$;
     }
