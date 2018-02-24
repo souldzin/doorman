@@ -1,11 +1,15 @@
 import time
 from rx import Observable
 
-BOUNDARY = (22*64) + 40
+BOUNDARY = (22*64) + 6*20
 
 def get_next_state(state, next_zone):
     if next_zone == state["zone"]:
-        return state
+        return {
+            "zone": state["zone"],
+            "time": state["time"],
+            "event": None
+        }
 
     next_time = time.time()
     event = None
