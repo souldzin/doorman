@@ -16,10 +16,12 @@ function realtimeChart() {
                 var shift = series.data.length > 20; // shift if the series is longer than 20
 
                 // add the point
-                var x = (new Date()).getTime();
+                var d = new Date();
+                var x = d.getTime();
                 var y = point;
-                
                 chart.series[0].addPoint([x, y], true, shift);
+
+                $('.occupancy-time').html(d.toLocaleString());
 
                 // call it again after 3 seconds
                 setTimeout(getChartPoint, 3000);
