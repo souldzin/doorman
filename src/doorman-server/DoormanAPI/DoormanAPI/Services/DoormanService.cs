@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using DoormanAPI.Entities;
 using DoormanAPI.Models;
+using DoormanAPI.Utility;
 
 namespace DoormanAPI.Services
 {
@@ -22,23 +23,26 @@ namespace DoormanAPI.Services
 			return Mapper.Map<IReadOnlyList<RoomVM>>(_context.Rooms.ToList());
 		}
 
-		RoomOccupancySnapshotResultsVM IDoormanService.SaveRoomOccupancySnapshot(RoomOccupancySnapshotVM model)
+		PostRoomOccupancySnapshotResultsVM IDoormanService.SaveRoomOccupancySnapshot(PostRoomOccupancySnapshotVM model)
 		{
+			var result = new PostRoomOccupancySnapshotResultsVM();
+
 			try
 			{
-				var dbModel = Mapper.Map<RoomOccupancySnapshotVM, RoomOccupancySnapshot>(model);
+				var dbModel = Mapper.Map<PostRoomOccupancySnapshotVM, RoomOccupancySnapshot>(model);
 				_context.RoomOccupancySnapshots.Add(dbModel);
 				_context.SaveChanges();
 
-				return Mapper.Map<RoomOccupancySnapshot, RoomOccupancySnapshotResultsVM>(dbModel);
+				return result;
 			}
 			catch (Exception ex)
 			{
+				result.Success = false;
 				return null;
 			}
 		}
 
-		RoomOccupancySnapshotResultsVM IDoormanService.GetRoomOccupancySnapshotById(int roomOccupancySnapshotId)
+		PostRoomOccupancySnapshotResultsVM IDoormanService.GetRoomOccupancySnapshotById(int roomOccupancySnapshotId)
 		{
 			try
 			{
@@ -50,7 +54,7 @@ namespace DoormanAPI.Services
 					return null;
 				}
 
-				return Mapper.Map<RoomOccupancySnapshot, RoomOccupancySnapshotResultsVM>(dbModel);
+				return Mapper.Map<RoomOccupancySnapshot, PostRoomOccupancySnapshotResultsVM>(dbModel);
 
 			}
 			catch (Exception ex)
@@ -59,17 +63,217 @@ namespace DoormanAPI.Services
 			}
 		}
 
-		IReadOnlyList<RoomOccupancySnapshotResultsVM> IDoormanService.GetAll()
+		IReadOnlyList<PostRoomOccupancySnapshotResultsVM> IDoormanService.GetAll()
 		{
-			return Mapper.Map<IReadOnlyList<RoomOccupancySnapshotResultsVM>>(_context.RoomOccupancySnapshots.ToList());
+			return Mapper.Map<IReadOnlyList<PostRoomOccupancySnapshotResultsVM>>(_context.RoomOccupancySnapshots.ToList());
+		}
+
+		PostRoomResultVM IDoormanService.RegisterRoom(string name, ClientConfigVM model)
+		{
+			var result = new PostRoomResultVM();
+
+			try
+			{
+				var dbModel =
+					_context.Rooms.SingleOrDefault(x => x.Description.Equals(name, StringComparison.OrdinalIgnoreCase));
+
+				if (dbModel != null)
+				{
+					result = Mapper.Map<Room, PostRoomResultVM>(dbModel);
+
+					var snapShotModels =
+						_context.RoomOccupancySnapshots.Where(x => x.RoomId == dbModel.RoomId);
+
+					if (snapShotModels.Any())
+					{
+						var snapShot = snapShotModels.OrderByDescending(x => x.CreateDateTime).First();
+						Mapper.Map<RoomOccupancySnapshot, PostRoomResultVM>(snapShot, result);
+					}
+				}
+				else
+				{
+					dbModel = new Room
+					{
+						Description = name
+					};
+
+					_context.Rooms.Add(dbModel);
+
+					_context.SaveChanges();
+
+					result = Mapper.Map<Room, PostRoomResultVM>(dbModel);
+				}
+
+				result.AccessToken = GetAccessToken(dbModel.RoomId, model);
+
+				return result;
+
+			}
+			catch (Exception ex)
+			{
+				return null;
+			}
+		}
+
+		private string GetAccessToken(int roomId, ClientConfigVM model)
+		{
+			return TokenBuilder.CreateToken(roomId, model);
+		}
+
+		GetRoomResultVM IDoormanService.GetRoom(int roomId)
+		{
+			var result = new GetRoomResultVM();
+
+			try
+			{
+				var dbModel =
+					_context.Rooms.SingleOrDefault(x => x.RoomId == roomId);
+
+				if (dbModel == null)
+				{
+					return null;
+				}
+
+				result = Mapper.Map<Room, GetRoomResultVM>(dbModel);
+
+				var dbModels =
+					_context.RoomOccupancySnapshots.Where(x => x.RoomId == dbModel.RoomId);
+
+				if (!dbModels.Any())
+					return result;
+				{
+					var snapShot = dbModels.OrderByDescending(x => x.CreateDateTime).First();
+					Mapper.Map<RoomOccupancySnapshot, GetRoomResultVM>(snapShot, result);
+				}
+
+				return result;
+
+			}
+			catch (Exception ex)
+			{
+				return null;
+			}
+		}
+
+		GetHistoricTrendVM IDoormanService.GetHistoricTrends(int roomId, DateTime start, DateTime end)
+		{
+			var result = new GetHistoricTrendVM();
+
+			try
+			{
+				var dbModels =
+					_context.RoomOccupancySnapshots.Where(x => x.RoomId == roomId).ToList();
+
+				if (!dbModels.Any())
+					return result;
+				{
+
+					var snapShot = dbModels.Where(x => x.CreateDateTime >= start && x.CreateDateTime <= end)
+						.OrderByDescending(x => x.CreateDateTime).Take(30);
+
+					result.Points = Mapper.Map<List<RoomOccupancySnapshot>, List<RoomOccupancySnapshotVM>>(snapShot.ToList());
+				}
+
+				return result;
+
+			}
+			catch (Exception ex)
+			{
+				return null;
+			}
+		}
+
+		GetRecentTrendVM IDoormanService.GetRecentTrends(int roomId, int seconds)
+		{
+			var result = new GetRecentTrendVM();
+
+			try
+			{
+				var dbModels =
+					_context.RoomOccupancySnapshots.Where(x => x.RoomId == roomId).ToList();
+
+				if (!dbModels.Any())
+					return result;
+				{
+					var currentDateTime = DateTime.Now;
+					var currentMinusSecondsDateTime = currentDateTime.AddSeconds(-seconds);
+					var snapShot = dbModels.Where(x => x.CreateDateTime >= currentMinusSecondsDateTime && x.CreateDateTime <= currentDateTime)
+						.OrderByDescending(x => x.CreateDateTime).Take(30);
+
+					result.Points = Mapper.Map<List<RoomOccupancySnapshot>, List<RoomOccupancySnapshotVM>>(snapShot.ToList());
+				}
+
+				return result;
+
+			}
+			catch (Exception ex)
+			{
+				return null;
+			}
+		}
+
+		GetStatVM IDoormanService.GetStats(int roomId, DateTime start, DateTime end)
+		{
+			var result = new GetStatVM();
+
+			try
+			{
+				var dbModels =
+					_context.RoomOccupancySnapshots.Where(x => x.RoomId == roomId).ToList();
+
+				if (!dbModels.Any())
+					return result;
+				{
+
+					var snapShot = dbModels.Where(x => x.CreateDateTime >= start && x.CreateDateTime <= end)
+						.OrderByDescending(x => x.CreateDateTime).Take(30).ToList();
+
+					if (!snapShot.Any())
+						return result;
+					{
+						result.Average = Math.Round(snapShot.Average(x => x.Count), 1);
+						result.Max = snapShot.Max(x => x.Count);
+						result.MaxDate = snapShot.Max(x => x.CreateDateTime);
+
+						var peakWeekday = snapShot.GroupBy(a => a.CreateDateTime.DayOfWeek).Select(g => g.OrderByDescending(x => x.Count).First()).ToList();
+						var peakTime = snapShot.GroupBy(a => a.CreateDateTime.DayOfWeek).Select(g => g.OrderByDescending(x => x.CreateDateTime).First()).ToList();
+
+						result.PeakWeekday = peakWeekday[0].CreateDateTime.DayOfWeek.ToString();
+						result.PeakTime = peakTime[0].CreateDateTime.ToShortTimeString();
+
+						result.StandardDeviation = CalculateStandardDeviation(snapShot.Select(x => x.Count).ToList());
+					}
+				}
+
+				return result;
+
+			}
+			catch (Exception ex)
+			{
+				return null;
+			}
+		}
+
+		private double CalculateStandardDeviation(List<int> occupancyCountList)
+		{
+			var average = occupancyCountList.Average();
+			var sumOfSquaresOfDifferences = occupancyCountList.Select(val => (val - average) * (val - average)).Sum();
+			var result = Math.Sqrt(sumOfSquaresOfDifferences / occupancyCountList.Count);
+
+			return Math.Round(result, 1);
 		}
 	}
 
 	public interface IDoormanService
 	{
 		IReadOnlyList<RoomVM> GetRooms();
-		RoomOccupancySnapshotResultsVM SaveRoomOccupancySnapshot(RoomOccupancySnapshotVM model);
-		IReadOnlyList<RoomOccupancySnapshotResultsVM> GetAll();
-		RoomOccupancySnapshotResultsVM GetRoomOccupancySnapshotById(int roomOccupancySnapshotId);
+		PostRoomOccupancySnapshotResultsVM SaveRoomOccupancySnapshot(PostRoomOccupancySnapshotVM model);
+		IReadOnlyList<PostRoomOccupancySnapshotResultsVM> GetAll();
+		PostRoomOccupancySnapshotResultsVM GetRoomOccupancySnapshotById(int roomOccupancySnapshotId);
+		PostRoomResultVM RegisterRoom(string name, ClientConfigVM model);
+		GetRoomResultVM GetRoom(int roomId);
+		GetHistoricTrendVM GetHistoricTrends(int roomId, DateTime start, DateTime end);
+		GetRecentTrendVM GetRecentTrends(int roomId, int seconds);
+		GetStatVM GetStats(int roomId, DateTime start, DateTime end);
 	}
 }

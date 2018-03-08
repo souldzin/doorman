@@ -13,6 +13,12 @@ namespace DoormanAPI.Profiles
 	    public RoomProfile()
 	    {
 		    CreateMap<Room, RoomVM>();
-	    }
+		    CreateMap<Room, PostRoomResultVM>()
+			    .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.Description))
+			    ;
+		    CreateMap<Room, GetRoomResultVM>()
+			    .ForMember(dest => dest.RoomName, opt => opt.MapFrom(src => src.Description))
+			    ;
+		}
     }
 }

@@ -6,11 +6,11 @@ using Newtonsoft.Json;
 
 namespace DoormanAPI.Models
 {
-    public class RoomOccupancySnapshotVM
+    public class PostRoomOccupancySnapshotVM
     {
+		[JsonProperty(PropertyName = "roomID")]
+	    public int RoomId { get; set; }
 	    [JsonProperty(PropertyName = "occupancyCount")]
-	    public int OccupancyCount { get; set; }
-	    [JsonProperty(PropertyName = "timestamp")]
-	    public DateTime CreateDateTime { get; set; }
+		public int OccupancyCount { get; set; }
 	}
 }

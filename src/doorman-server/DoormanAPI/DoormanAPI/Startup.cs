@@ -8,6 +8,9 @@ using DoormanAPI.Entities;
 using DoormanAPI.Hub;
 using DoormanAPI.Seed;
 using DoormanAPI.Services;
+using DoormanAPI.Utility;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
@@ -32,8 +35,21 @@ namespace DoormanAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-	        
-	        services.AddSignalR();
+	        services
+		        .AddAuthentication(options =>
+		        {
+			        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+			        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+		        })
+		        .AddJwtBearer(options => { options.TokenValidationParameters = TokenBuilder.TokenValidationParams; });
+
+	        services.AddAuthorization(options =>
+	        {
+		        options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+			        .RequireAuthenticatedUser().Build();
+	        });
+
+			services.AddSignalR();
 	        services.AddCors(options =>
 	        {
 		        options.AddPolicy("CorsPolicy",
