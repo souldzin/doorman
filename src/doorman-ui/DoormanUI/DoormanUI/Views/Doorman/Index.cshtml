@@ -1,40 +1,45 @@
 ﻿@page
 @{
 }
+<!DOCTYPE html>
+<html>
 <head>
 	<title>@ViewBag.Title</title>
 	<script src="js/signalr-client.js" asp-append-version="true"></script>
 	<script src="js/jquery-3.3.1.min.js"></script>
 </head>
 <body>
-<h1>Doorman Coming Soon!</h1>
-<h2>The time on the server is @DateTime.Now</h2><br/>
-<h2>How many students are in the room <span class="x-room-counter" style="color: red;font-style: italic">0</span></h2>
-</body>
-<script type="text/javascript">
-	
-	$(function () {
+	<h1>Doorman Coming Soon!</h1>
+	<h2>The time on the server is @DateTime.Now</h2>
+	<h2>Room ID: <span class="x-room-id" style="color: red;font-style: italic">N/A</span></h2>
+	<h2>Room Name: <span class="x-room-name" style="color: red;font-style: italic">N/A</span></h2>
+	<h2>How many students are in the room <span class="x-room-counter" style="color: red;font-style: italic">N/A</span></h2>
+	<script type="text/javascript">
 
-		var url = "http://doormanapi20180217051526.azurewebsites.net/doorman";
-		var transportType = signalR.TransportType.WebSockets; //can also be ServerSentEvents or LongPolling
-		var logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
-		var doormanHub =
-			new signalR.HttpConnection(url, { transport: transportType, logger: logger });
-		var doormanConnection = new signalR.HubConnection(doormanHub, logger);
+		$(function () {
 
-		doormanConnection.onClosed = e => {
-			console.log('connection closed');
-		};
+			var url = "http://doormanapi20180217051526.azurewebsites.net/doorman";
+			var logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
+			var doormanHub = new signalR.HttpConnection(url);
+			var doormanConnection = new signalR.HubConnection(doormanHub, logger);
 
-		doormanConnection.on('Broadcast',
-			(message) => {
-				console.log(message);
-				$('.x-room-counter').text(message.count);
-				console.log('received message');
+			doormanConnection.onClosed = e => {
+			};
+
+			doormanConnection.on('Broadcast',
+				(result) => {
+
+					$('.x-room-id').text(result.roomID);
+					$('.x-room-name').text(result.roomName);
+					$('.x-room-counter').text(result.occupancyCount);
+				});
+
+			doormanConnection.start({ transport: ['webSockets', 'serverSentEvents', 'longPolling'] }).catch(err => {
+				console.log(err + 'connection error');
 			});
-
-		doormanConnection.start().catch(err => {
-			console.log(err + 'connection error');
 		});
-	});
-</script>
+	</script>
+
+</body>
+</html>
+

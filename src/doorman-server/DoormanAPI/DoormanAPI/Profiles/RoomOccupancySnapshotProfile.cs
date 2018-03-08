@@ -14,7 +14,7 @@ namespace DoormanAPI.Profiles
 	    {
 		    CreateMap<PostRoomOccupancySnapshotVM, RoomOccupancySnapshot>()
 			    .ForMember(dest => dest.Count, opt => opt.MapFrom(src => src.OccupancyCount))
-			    .ForMember(dest => dest.CreateDateTime, opt => opt.UseValue(DateTime.Now));
+			    .ForMember(dest => dest.CreateDateTime, opt => opt.ResolveUsing(src => DateTime.Now));
 
 			CreateMap<RoomOccupancySnapshot, PostRoomResultVM>()
 			    .ForMember(dest => dest.RoomId, opt => opt.Ignore())

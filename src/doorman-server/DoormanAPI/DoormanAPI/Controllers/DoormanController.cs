@@ -13,15 +13,13 @@ namespace DoormanAPI.Controllers
     [Route("api/doorman/")]
     public class DoormanController : Controller
     {
-	    private readonly IHubContext<DoormanHub> _context;
 		private readonly IDoormanService _doormanService;
 	    private readonly string _clientId;
 	    private readonly string _clientSecret;
 
-	    public DoormanController(IDoormanService doormanService, IHubContext<DoormanHub> context)
+	    public DoormanController(IDoormanService doormanService)
 	    {
 		    _doormanService = doormanService;
-		    _context = context;
 		    _clientId = Startup.Configuration["DoormanConfig:client_id"];
 		    _clientSecret = Startup.Configuration["DoormanConfig:client_secret"];
 	    }
@@ -42,8 +40,7 @@ namespace DoormanAPI.Controllers
 		        return NotFound();
 	        }
 
-			//Components for providing real-time bi-directional communication across the Web
-			_context.Clients.All.InvokeAsync("Broadcast", result);
+			_doormanService.SendBroadcast(model.RoomId);
 
 	        return Ok(result);
         }

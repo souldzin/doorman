@@ -9,9 +9,9 @@ namespace DoormanAPI.Hub
 {
     public class DoormanHub : Microsoft.AspNetCore.SignalR.Hub
     {
-	    public async Task Broadcast(string name, PostRoomOccupancySnapshotResultsVM roomOccupancySnapshotResults)
+	    public async Task Broadcast(string name, GetRoomResultVM roomResult)
 	    {
-		    await this.Clients.All.InvokeAsync(name, roomOccupancySnapshotResults);
+		    await this.Clients.All.InvokeAsync(name, roomResult);
 	    }
 	}
 }

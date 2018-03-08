@@ -4,18 +4,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using DoormanAPI.Entities;
+using DoormanAPI.Hub;
 using DoormanAPI.Models;
 using DoormanAPI.Utility;
+using Microsoft.AspNetCore.SignalR;
 
 namespace DoormanAPI.Services
 {
 	public class DoormanService : IDoormanService
 	{
+		private readonly IHubContext<DoormanHub> _doormanHub;
 		private readonly IDoormanContext _context;
 
-		public DoormanService(IDoormanContext context)
+		public DoormanService(IDoormanContext context, IHubContext<DoormanHub> doormanHub)
 		{
 			_context = context;
+			_doormanHub = doormanHub;
 		}
 
 		IReadOnlyList<RoomVM> IDoormanService.GetRooms()
@@ -254,6 +258,14 @@ namespace DoormanAPI.Services
 			}
 		}
 
+		void IDoormanService.SendBroadcast(int roomId)
+		{
+			var currentRoom = ((IDoormanService) this).GetRoom(roomId);
+
+			//Components for providing real-time bi-directional communication across the Web
+			_doormanHub.Clients.All.InvokeAsync("Broadcast", currentRoom);
+		}
+
 		private double CalculateStandardDeviation(List<int> occupancyCountList)
 		{
 			var average = occupancyCountList.Average();
@@ -275,5 +287,6 @@ namespace DoormanAPI.Services
 		GetHistoricTrendVM GetHistoricTrends(int roomId, DateTime start, DateTime end);
 		GetRecentTrendVM GetRecentTrends(int roomId, int seconds);
 		GetStatVM GetStats(int roomId, DateTime start, DateTime end);
+		void SendBroadcast(int roomId);
 	}
 }
