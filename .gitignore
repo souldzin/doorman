@@ -1,10 +1,11 @@
+# Visual studio and C# things...
 *.user
 *.suo
-bin
-Bin
-obj
-Obj
-/.vs/
+bin/
+Bin/
+obj/
+Obj/
+.vs/
 *.vs
 *resharper*
 .DS_Store
@@ -12,10 +13,21 @@ Obj
 *.scssc
 .sass-cache
 packages
-=======
 .vscode/
 
 # Python Things
 __pycache__/
 *.egg-info/
 .pytest_cache/
+
+# Visual Studio Code things...
+.vscode/
+
+# Python things...
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# Nodejs things...
+node_modules/
+dist/
