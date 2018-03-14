@@ -6,7 +6,7 @@ function realtimeChart() {
     
     var getChartPoint = function () {
         $.ajax({
-            url: 'API/GetRealTime',
+            url: '../API/GetRealTime',
             type: 'get',
             success: function (resp) {
                 $('.occupancy-size').html(resp.val);

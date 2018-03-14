@@ -1,43 +1,30 @@
 ﻿@{
-    ViewBag.Title = "Real-time Occupancy";
+    ViewBag.Title = "Home";
 }
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/series-label.js"></script>
-
 <style>
-    .info-box {
-        margin:0 0 15px;
-        text-align:center;
+    .contributors li{
+        font-weight:bold;
+    }
+     .contributors{
+        float:right;
     }
 </style>
-<script src="~/Scripts/realtime/realtimejs.js?v=10"></script>
-<h1 style="margin:10px;">Real-time Occupancy</h1>
-<div class="panel panel-title info-box">
-    <div class="panel-body">
-        <h3>EMSE Room (ER9087-67)</h3>
+<div class="container">
+    <div class="jumbotron">
+        <h1>Welcome to Doorman</h1>
+        <p>
+            The Doorman occupancy monitoring system is a cost-effective and accurate provider of occupancy information.
+        </p>
+        <div class="contributors">
+            <h2>Contributors</h2>
+            <ul>
+                <li>Madhumita Mathane</li>
+                <li> Lamech Maxwell</li>
+                <li> Paul Orazulike</li>
+                <li>Harish Patel</li>
+                <li> Paul Slaughter </li>
+            </ul>
+        </div>
+        <div style="clear:both"></div>
     </div>
 </div>
-<div class="row">
-    <div class="col-sm-4">
-        <div class="panel panel-title info-box">
-            <div class="panel-body">
-                <h3>Current Occupancy:</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-2">
-        <div class="panel panel-title info-box">
-            <div class="panel-body">
-                <h3 class="occupancy-size"></h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6">
-        <div class="panel panel-title info-box">
-            <div class="panel-body">
-                <h3 class="occupancy-time"></h3>
-            </div>
-        </div>
-    </div>
-</div>
-<div id="realtime-chart"></div>
