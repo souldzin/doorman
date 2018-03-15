@@ -190,6 +190,7 @@
     <Content Include="Views\Home\Historic.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Home\_historicData.cshtml" />
+    <Content Include="Views\Home\RealtimeDashboard.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
