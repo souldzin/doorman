@@ -5,9 +5,14 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AutoMapper;
 using DoormanAPI.Entities;
+using DoormanAPI.Hub;
 using DoormanAPI.Seed;
 using DoormanAPI.Services;
+using DoormanAPI.Utility;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,7 +35,31 @@ namespace DoormanAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().AddJsonOptions(o =>
+	        services
+		        .AddAuthentication(options =>
+		        {
+			        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+			        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+		        })
+		        .AddJwtBearer(options => { options.TokenValidationParameters = TokenBuilder.TokenValidationParams; });
+
+	        services.AddAuthorization(options =>
+	        {
+		        options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+			        .RequireAuthenticatedUser().Build();
+	        });
+
+			services.AddSignalR();
+	        services.AddCors(options =>
+	        {
+		        options.AddPolicy("CorsPolicy",
+			        builder => builder.AllowAnyOrigin()
+				        .AllowAnyMethod()
+				        .AllowAnyHeader()
+				        .AllowCredentials());
+	        });
+
+			services.AddMvc().AddJsonOptions(o =>
             {
 				if(o.SerializerSettings.ContractResolver == null)
 					return;
@@ -57,6 +86,15 @@ namespace DoormanAPI
 			context.EnsureSeedDataForContext();
 
 			Mapper.Initialize(cfg => cfg.AddProfiles(Assembly.GetExecutingAssembly()));
+
+			app.UseCors("CorsPolicy");
+
+	        app.UseWebSockets();
+
+			app.UseSignalR(routes =>
+	        {
+		        routes.MapHub<DoormanHub>("doorman");
+	        });
 
 	        app.UseMvc();
 		}

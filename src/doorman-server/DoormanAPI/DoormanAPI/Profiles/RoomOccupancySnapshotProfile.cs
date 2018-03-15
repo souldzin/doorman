@@ -12,9 +12,24 @@ namespace DoormanAPI.Profiles
     {
 	    public RoomOccupancySnapshotProfile()
 	    {
-		    CreateMap<RoomOccupancySnapshotVM, RoomOccupancySnapshot>()
-			    .ForMember(dest => dest.CreateDateTime, opt => opt.UseValue(DateTime.Now));
-		    CreateMap<RoomOccupancySnapshot, RoomOccupancySnapshotResultsVM>();
+		    CreateMap<PostRoomOccupancySnapshotVM, RoomOccupancySnapshot>()
+			    .ForMember(dest => dest.Count, opt => opt.MapFrom(src => src.OccupancyCount))
+			    .ForMember(dest => dest.CreateDateTime, opt => opt.ResolveUsing(src => DateTime.Now));
+
+			CreateMap<RoomOccupancySnapshot, PostRoomResultVM>()
+			    .ForMember(dest => dest.RoomId, opt => opt.Ignore())
+				.ForMember(dest => dest.OccupancyCount, opt => opt.MapFrom(src => src.Count))
+				;
+
+		    CreateMap<RoomOccupancySnapshot, GetRoomResultVM>()
+			    .ForMember(dest => dest.RoomId, opt => opt.Ignore())
+			    .ForMember(dest => dest.RoomName, opt => opt.Ignore())
+			    .ForMember(dest => dest.OccupancyCount, opt => opt.MapFrom(src => src.Count))
+				;
+
+		    CreateMap<RoomOccupancySnapshot, RoomOccupancySnapshotVM>()
+			    .ForMember(dest => dest.OccupancyCount, opt => opt.MapFrom(src => src.Count))
+				;
 		}
 	}
 }

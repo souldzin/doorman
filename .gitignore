@@ -12,8 +12,13 @@ Obj/
 *.sassc
 *.scssc
 .sass-cache
+packages
+.vscode/
 
-packages/
+# Python Things
+__pycache__/
+*.egg-info/
+.pytest_cache/
 
 # Visual Studio Code things...
 .vscode/
