@@ -7,5 +7,40 @@
     </script>
 }
 <div class="container">
-    <h1>Historic</h1>
+    <h1>Historic Occupancy</h1>
+    <div class="panel panel-title info-box" style="margin-bottom:15px;">
+        <div class="panel-body">
+            <h3>EMSE Room (ID:12)</h3>
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:15px;">
+        <div class="col-sm-6">
+            <div class="panel panel-title">
+                <div class="panel-body historic-data-box"></div>
+            </div>
+        </div>
+        <div class="historic-date-box col-sm-6">
+            <div class="panel panel-title">
+                <div class="panel-body">
+                    <div class="same-line">
+                        <label for="start-date">Start Date:</label>
+                        <input type="datetime-local" class="form-control" id="start-date" />
+                    </div>
+                    <div class="same-line">
+                        <label for="end-date">End Date:</label>
+                        <input type="datetime-local" class="form-control" id="end-date" />
+                    </div>
+                    <div class="btn btn-success" id="filter">Filter</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="historic-chart-box row">
+        @*<div class="col-sm-2" style="border-right: 1px solid lightgray;">
+            <div class="btn btn-success historic-chart-btn" data-id="1" data-title="Daily Average Occupancy">Daily Avg</div>
+            <div class="btn btn-info historic-chart-btn" data-id="2" data-title="Daily Standard Deviation Occupancy">Daily Stdev</div>
+            <div class="btn btn-primary historic-chart-btn" data-id="3" data-title="Daily Max Occupancy">Daily Max</div>
+        </div>*@
+        <div id="historic-chart" class="col-sm-12"></div>
+    </div>
 </div>
