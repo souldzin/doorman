@@ -31,3 +31,6 @@ __pycache__/
 # Nodejs things...
 node_modules/
 dist/
+
+# Compiled javascript
+*.bundle.js

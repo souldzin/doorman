@@ -1,0 +1,25 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+    background: #f0f0f0;
+}
+
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.contributors li{
+    font-weight:bold;
+}
+
+.contributors{
+    float:right;
+}
+
+.doorman-dashboard .info-box {
+    margin: 0 0 15px;
+    text-align: center;
+}

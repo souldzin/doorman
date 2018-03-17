@@ -1,0 +1,18 @@
+{
+  "name": "doorman.ui",
+  "version": "1.0.0",
+  "description": "UI server and client scripts of Doorman",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "webpack": "4.1.1",
+    "webpack-cli": "^2.0.12"
+  },
+  "dependencies": {
+    "highcharts": "^6.0.7"
+  }
+}
