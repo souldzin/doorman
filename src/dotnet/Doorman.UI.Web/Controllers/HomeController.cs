@@ -8,13 +8,16 @@ using Doorman.UI.Web.Models;
 
 namespace Doorman.UI.Web.Controllers
 {
+    [Route("/")]
     public class HomeController : Controller
     {
+        [Route("")]
         public IActionResult Index()
         {
             return View();
         }
 
+        [Route("about")]
         public IActionResult About()
         {
             ViewData["Message"] = "Your application description page.";
@@ -22,6 +25,7 @@ namespace Doorman.UI.Web.Controllers
             return View();
         }
 
+        [Route("contact")]
         public IActionResult Contact()
         {
             ViewData["Message"] = "Your contact page.";
@@ -29,6 +33,7 @@ namespace Doorman.UI.Web.Controllers
             return View();
         }
 
+        [Route("error")]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
