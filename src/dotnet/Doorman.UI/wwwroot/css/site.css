@@ -17,3 +17,8 @@
 .contributors{
     float:right;
 }
+
+.doorman-dashboard .info-box {
+    margin: 0 0 15px;
+    text-align: center;
+}

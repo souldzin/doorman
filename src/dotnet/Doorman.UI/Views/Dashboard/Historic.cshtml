@@ -1,7 +1,11 @@
 @{
     ViewData["Title"] = "Historic Occupancy";
 }
-
+@section Scripts{
+    <script>
+        Doorman.UI.HistoricDashboard.start($("#dashboard"));    
+    </script>
+}
 <div class="container">
     <h1>Historic</h1>
 </div>
