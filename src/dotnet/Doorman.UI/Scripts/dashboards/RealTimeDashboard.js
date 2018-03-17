@@ -4,6 +4,10 @@ import * as Highcharts from 'highcharts';
 require('highcharts/modules/series-label')(Highcharts);
 
 class RealTimeDashboard extends BaseDashboard {
+    /**
+     * This is an alias for `new RealTimeDashboard`
+     * @param {k} args 
+     */
     static start(...args) {
         return new RealTimeDashboard(...args);
     }
@@ -32,10 +36,18 @@ class RealTimeDashboard extends BaseDashboard {
         return this.$el.find('.occupancy-time');
     }
 
+    _getOccupancyChartElement() {
+        return this.$el.find('.occupancy-chart');
+    }
+
     _createChart() {
+        const element = this._getOccupancyChartElement()[0];
+
+        console.log(element);
+
         return new Highcharts.Chart({
             chart: {
-                renderTo: 'realtime-chart',
+                renderTo: element,
                 defaultSeriesType: 'spline',
             },
             title: {
