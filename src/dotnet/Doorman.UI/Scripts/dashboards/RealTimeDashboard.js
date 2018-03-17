@@ -43,8 +43,6 @@ class RealTimeDashboard extends BaseDashboard {
     _createChart() {
         const element = this._getOccupancyChartElement()[0];
 
-        console.log(element);
-
         return new Highcharts.Chart({
             chart: {
                 renderTo: element,

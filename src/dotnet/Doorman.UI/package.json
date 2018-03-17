@@ -4,8 +4,8 @@
   "description": "UI server and client scripts of Doorman",
   "main": "index.js",
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack --watch --progress"
+    "build": "webpack --mode development",
+    "watch": "webpack --mode development --watch --progress"
   },
   "author": "",
   "license": "ISC",
