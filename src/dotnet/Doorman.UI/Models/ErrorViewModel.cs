@@ -1,6 +1,6 @@
 using System;
 
-namespace Doorman.UI.Web.Models
+namespace Doorman.UI.Models
 {
     public class ErrorViewModel
     {

@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Doorman.UI.Web.Models;
+using Doorman.UI.Models;
 
-namespace Doorman.UI.Web.Controllers
+namespace Doorman.UI.Controllers
 {
     [Route("/dashboard")]
     public class DashboardController : Controller
