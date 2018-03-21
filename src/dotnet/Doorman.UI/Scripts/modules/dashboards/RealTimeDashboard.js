@@ -1,17 +1,20 @@
 import * as Highcharts from 'highcharts';
 import DoormanMasterClient from '../services/DoormanMasterClient';
+import template from './RealTimeDashboard.mustache';
 
 require('highcharts/modules/series-label')(Highcharts);
 
 // selectors constants
 // --------------------
-const CLS_OCCUPANCY_COUNT = '.occupancy-count';
-const CLS_OCCUPANCY_TIME = '.occupancy-time';
-const CLS_OCCUPANCY_CHART = '.occupancy-chart';
+const CLS_DASHBOARD_BODY = '.dashboard-body';
+const CLS_DASHBOARD_CHART = '.dashboard-chart';
 
 class RealTimeDashboard {
-    constructor($el, client) {
-        this.$el = $el;
+    constructor(options, client) {
+        const { element, roomId } = options;
+
+        this.$el = element;
+        this.roomId = roomId;
         this._client = client;
     }
 
@@ -26,7 +29,7 @@ class RealTimeDashboard {
     }
 
     _createChart() {
-        const element = this.$el.find(CLS_OCCUPANCY_CHART);
+        const element = this.$el.find(CLS_DASHBOARD_CHART);
 
         return new Highcharts.Chart({
             chart: {
@@ -39,7 +42,7 @@ class RealTimeDashboard {
             xAxis: {
                 type: 'datetime',
                 tickPixelInterval: 150,
-                maxZoom: 20 * 1000
+                minRange: 20000
             },
             yAxis: {
                 minPadding: 0.2,
@@ -65,21 +68,22 @@ class RealTimeDashboard {
     }
 
     _updateWithSnapshot(snapshot) {
-        this._updateCount(snapshot.count);
-        this._updateTime(snapshot.timestamp);
         this._updateChart(snapshot);
+        this._updateBody(snapshot);
     }
 
-    _updateCount(count) {
-        const element = this.$el.find(CLS_OCCUPANCY_COUNT);
-
-        element.text(count);
+    _renderBody(snapshot) {
+        return template({
+            count: snapshot.count,
+            timestamp: snapshot.timestamp.toLocaleString(),
+            room: "EMSE Room (ID: 12)"
+        });
     }
 
-    _updateTime(time) {
-        const element = this.$el.find(CLS_OCCUPANCY_TIME);
+    _updateBody(snapshot) {
+        const html = this._renderBody(snapshot);
 
-        element.text(time.toLocaleString());
+        this.$el.find(CLS_DASHBOARD_BODY).html(html);
     }
 
     _updateChart({ count, timestamp }) {
@@ -92,9 +96,9 @@ class RealTimeDashboard {
     }
 }
 
-RealTimeDashboard.start = function start($el) {
+RealTimeDashboard.start = function start(options) {
     const client = new DoormanMasterClient();
-    const dashboard = new RealTimeDashboard($el, client);
+    const dashboard = new RealTimeDashboard(options, client);
 
     dashboard.onLoad();
 

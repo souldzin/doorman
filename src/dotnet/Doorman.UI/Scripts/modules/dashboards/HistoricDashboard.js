@@ -1,5 +1,6 @@
 import * as Highcharts from 'highcharts';
 import DoormanMasterClient from '../services/DoormanMasterClient';
+import template from './HistoricDashboard.mustache';
 
 require('highcharts/modules/series-label')(Highcharts);
 
@@ -30,37 +31,6 @@ function getDateValue(element) {
     const val = element.val();
     const time = Date.parse(val);
     return Number.isNaN(time) ? null : new Date(time);
-}
-
-// render functions
-// ---------------------
-function renderStatsView(stats) {
-    return (
-`<div>
-    <span class="data-label">Occupancy Average:</span>
-    <span class="data-general">${stats.average || ""}</span>
-</div>
-<div>
-    <span class="data-label">Occupancy StdDev:</span>
-    <span class="data-general">${stats.stdev || ""}</span>
-</div>
-<div>
-    <span class="data-label">Max Occupancy:</span>
-    <span class="data-general">${stats.max || ""}</span>
-</div>
-<div>
-    <span class="data-label">Max Occupancy Date:</span>
-    <span class="data-general">${stats.maxDate || ""}</span>
-</div>
-<div>
-    <span class="data-label">Peak Weekday:</span>
-    <span class="data-general">${stats.peakWeekday || ""}</span>
-</div>
-<div>
-    <span class="data-label">Peak Time:</span>
-    <span class="data-general">${stats.peakTime || ""}</span>
-</div>`
-    );
 }
 
 // HistoricDashboard
@@ -100,7 +70,7 @@ class HistoricDashboard {
     }
 
     _renderStatsView(stats) {
-        const html = renderStatsView(stats || {});
+        const html = template(stats || {});
 
         const element = this.$el.find(CLS_OCCUPANCY_STATS);
 

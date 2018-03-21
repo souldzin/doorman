@@ -10,10 +10,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "mustache-loader": "^1.4.0",
     "webpack": "4.1.1",
     "webpack-cli": "^2.0.12"
   },
   "dependencies": {
-    "highcharts": "^6.0.7"
+    "highcharts": "^6.0.7",
+    "hogan.js": "^3.0.2"
   }
 }
