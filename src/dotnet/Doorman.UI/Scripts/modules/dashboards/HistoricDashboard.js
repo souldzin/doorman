@@ -1,6 +1,39 @@
-import BaseDashboard from './BaseDashboard';
-import * as DoormanMasterClient from '../common/DoormanMasterClient';
+import * as Highcharts from 'highcharts';
+import DoormanMasterClient from '../services/DoormanMasterClient';
 
+require('highcharts/modules/series-label')(Highcharts);
+
+// selectors constants
+// --------------------
+const CLS_OCCUPANCY_FILTER_START = '.occupancy-filter-start';
+const CLS_OCCUPANCY_FILTER_END = '.occupancy-filter-end';
+const CLS_OCCUPANCY_FILTER_BUTTON = '.occupancy-filter-btn';
+const CLS_OCCUPANCY_STATS = '.occupancy-stats-view';
+const CLS_OCCUPANCY_CHART = '.occupancy-chart';
+
+// util functions
+// ---------------------
+function toStringObjectValues(obj) {
+    for(var key in obj) {
+        const value = obj[key];
+        const strValue = value.toLocaleString
+            ? value.toLocaleString()
+            : value.toString();
+        
+        obj[key] = strValue;
+    }
+
+    return obj;
+}
+
+function getDateValue(element) {
+    const val = element.val();
+    const time = Date.parse(val);
+    return Number.isNaN(time) ? null : new Date(time);
+}
+
+// render functions
+// ---------------------
 function renderStatsView(stats) {
     return (
 `<div>
@@ -30,22 +63,16 @@ function renderStatsView(stats) {
     );
 }
 
-class HistoricDashboard extends BaseDashboard {
-    /**
-     * This is an alias for `new HistoricDashboard`
-     * @param {k} args 
-     */
-    static start(...args) {
-        debugger;
-        return new HistoricDashboard(...args);
-    }
-
-    constructor($el) {
-        super($el);
+// HistoricDashboard
+// --------------------
+class HistoricDashboard {
+    constructor($el, client) {
+        this.$el = $el;
+        this._client = client;
     }
 
     onLoad() {
-        const filterBtn = this._getFilterButtonElement();
+        const filterBtn = this.$el.find(CLS_OCCUPANCY_FILTER_BUTTON);
 
         this._renderStatsView(null);
 
@@ -63,15 +90,9 @@ class HistoricDashboard extends BaseDashboard {
             return;
         }
 
-        DoormanMasterClient.getHistoricStats(0, start, end)
+        this._client.getHistoricStats(0, start, end)
             .then((x) => {
-                for(var key in x) {
-                    x[key] = x[key].toLocaleString
-                        ? x[key].toLocaleString()
-                        : x[key].toString();
-                }
-
-                return x;
+                return toStringObjectValues(x);
             })
             .then((x) => {
                 this._renderStatsView(x)
@@ -79,51 +100,31 @@ class HistoricDashboard extends BaseDashboard {
     }
 
     _renderStatsView(stats) {
-        const element = this._getStatsViewElement();
+        const html = renderStatsView(stats || {});
 
-        console.log(element);
+        const element = this.$el.find(CLS_OCCUPANCY_STATS);
 
-        element.html(renderStatsView(stats || {}));
+        element.html(html);
     }
 
     _getFilterStart() {
-        const startVal = this._getFilterStartElement().val();
-        const startTime = Date.parse(startVal);
-        return Number.isNaN(startTime) ? null : new Date(startTime);
+        const element = this.$el.find(CLS_OCCUPANCY_FILTER_START);
+
+        return getDateValue(element);
     }
 
     _getFilterEnd() {
-        const val = this._getFilterEndElement().val();
-        const time = Date.parse(val);
-        return Number.isNaN(time) ? null : new Date(time);
-    }
+        const element = this.$el.find(CLS_OCCUPANCY_FILTER_END);
 
-    _getFilterStartElement() {
-        return this.$el.find('.occupancy-filter-start');
-    }
-
-    _getFilterEndElement() {
-        return this.$el.find('.occupancy-filter-end');
-    }
-
-    _getFilterButtonElement() {
-        return this.$el.find('.occupancy-filter-btn');
-    }
-
-    _getOccupancyChartElement() {
-        return this.$el.find('.occupancy-chart');        
-    }
-
-    _getStatsViewElement() {
-        return this.$el.find('.occupancy-stats-view');
+        return getDateValue(element);
     }
 
     _createChart(categories, data) {
-        const element = this._getOccupancyChartElement()[0];
+        const element = this.$el.find(CLS_OCCUPANCY_CHART);
 
         return new Highcharts.Chart({
             chart: {
-                renderTo: element,
+                renderTo: element[0],
                 type: 'spline',
             },
             title: {
@@ -147,8 +148,13 @@ class HistoricDashboard extends BaseDashboard {
     }
 }
 
-HistoricDashboard.start = function(...args) {
-    return new HistoricDashboard(...args);
+HistoricDashboard.start = function start($el) {
+    const client = new DoormanMasterClient();
+    const dashboard = new HistoricDashboard($el, client);
+
+    dashboard.onLoad();
+
+    return dashboard;
 }
 
 export default HistoricDashboard;

@@ -1,24 +1,21 @@
-import BaseDashboard from './BaseDashboard';
 import * as Highcharts from 'highcharts';
+import DoormanMasterClient from '../services/DoormanMasterClient';
 
 require('highcharts/modules/series-label')(Highcharts);
 
-class RealTimeDashboard extends BaseDashboard {
-    /**
-     * This is an alias for `new RealTimeDashboard`
-     * @param {k} args 
-     */
-    static start(...args) {
-        return new RealTimeDashboard(...args);
-    }
+// selectors constants
+// --------------------
+const CLS_OCCUPANCY_COUNT = '.occupancy-count';
+const CLS_OCCUPANCY_TIME = '.occupancy-time';
+const CLS_OCCUPANCY_CHART = '.occupancy-chart';
 
-    constructor($el) {
-        super($el);
+class RealTimeDashboard {
+    constructor($el, client) {
+        this.$el = $el;
+        this._client = client;
     }
 
     onLoad() {
-        console.log("[realtime] Starting dashboard...");
-        
         this._chart = this._createChart();
 
         this._generate();
@@ -28,24 +25,12 @@ class RealTimeDashboard extends BaseDashboard {
         }, 3000);
     }
 
-    _getOccupancyCountElement() {
-        return this.$el.find('.occupancy-count');
-    }
-
-    _getOccupancyTimeElement() {
-        return this.$el.find('.occupancy-time');
-    }
-
-    _getOccupancyChartElement() {
-        return this.$el.find('.occupancy-chart');
-    }
-
     _createChart() {
-        const element = this._getOccupancyChartElement()[0];
+        const element = this.$el.find(CLS_OCCUPANCY_CHART);
 
         return new Highcharts.Chart({
             chart: {
-                renderTo: element,
+                renderTo: element[0],
                 defaultSeriesType: 'spline',
             },
             title: {
@@ -86,11 +71,15 @@ class RealTimeDashboard extends BaseDashboard {
     }
 
     _updateCount(count) {
-        this._getOccupancyCountElement().text(count);
+        const element = this.$el.find(CLS_OCCUPANCY_COUNT);
+
+        element.text(count);
     }
 
     _updateTime(time) {
-        this._getOccupancyTimeElement().text(time.toLocaleString());
+        const element = this.$el.find(CLS_OCCUPANCY_TIME);
+
+        element.text(time.toLocaleString());
     }
 
     _updateChart({ count, timestamp }) {
@@ -101,6 +90,15 @@ class RealTimeDashboard extends BaseDashboard {
 
         series.addPoint([time, count], true, isShift);
     }
+}
+
+RealTimeDashboard.start = function start($el) {
+    const client = new DoormanMasterClient();
+    const dashboard = new RealTimeDashboard($el, client);
+
+    dashboard.onLoad();
+
+    return dashboard;
 }
 
 export default RealTimeDashboard;
