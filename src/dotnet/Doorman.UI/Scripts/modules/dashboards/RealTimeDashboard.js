@@ -1,24 +1,24 @@
-import BaseDashboard from './BaseDashboard';
 import * as Highcharts from 'highcharts';
+import DoormanMasterClient from '../services/DoormanMasterClient';
+import template from './RealTimeDashboard.mustache';
 
 require('highcharts/modules/series-label')(Highcharts);
 
-class RealTimeDashboard extends BaseDashboard {
-    /**
-     * This is an alias for `new RealTimeDashboard`
-     * @param {k} args 
-     */
-    static start(...args) {
-        return new RealTimeDashboard(...args);
-    }
+// selectors constants
+// --------------------
+const CLS_DASHBOARD_BODY = '.dashboard-body';
+const CLS_DASHBOARD_CHART = '.dashboard-chart';
 
-    constructor($el) {
-        super($el);
+class RealTimeDashboard {
+    constructor(options, client) {
+        const { element, roomId } = options;
+
+        this.$el = element;
+        this.roomId = roomId;
+        this._client = client;
     }
 
     onLoad() {
-        console.log("[realtime] Starting dashboard...");
-        
         this._chart = this._createChart();
 
         this._generate();
@@ -28,24 +28,12 @@ class RealTimeDashboard extends BaseDashboard {
         }, 3000);
     }
 
-    _getOccupancyCountElement() {
-        return this.$el.find('.occupancy-count');
-    }
-
-    _getOccupancyTimeElement() {
-        return this.$el.find('.occupancy-time');
-    }
-
-    _getOccupancyChartElement() {
-        return this.$el.find('.occupancy-chart');
-    }
-
     _createChart() {
-        const element = this._getOccupancyChartElement()[0];
+        const element = this.$el.find(CLS_DASHBOARD_CHART);
 
         return new Highcharts.Chart({
             chart: {
-                renderTo: element,
+                renderTo: element[0],
                 defaultSeriesType: 'spline',
             },
             title: {
@@ -54,7 +42,7 @@ class RealTimeDashboard extends BaseDashboard {
             xAxis: {
                 type: 'datetime',
                 tickPixelInterval: 150,
-                maxZoom: 20 * 1000
+                minRange: 20000
             },
             yAxis: {
                 minPadding: 0.2,
@@ -80,17 +68,22 @@ class RealTimeDashboard extends BaseDashboard {
     }
 
     _updateWithSnapshot(snapshot) {
-        this._updateCount(snapshot.count);
-        this._updateTime(snapshot.timestamp);
         this._updateChart(snapshot);
+        this._updateBody(snapshot);
     }
 
-    _updateCount(count) {
-        this._getOccupancyCountElement().text(count);
+    _renderBody(snapshot) {
+        return template({
+            count: snapshot.count,
+            timestamp: snapshot.timestamp.toLocaleString(),
+            room: "EMSE Room (ID: 12)"
+        });
     }
 
-    _updateTime(time) {
-        this._getOccupancyTimeElement().text(time.toLocaleString());
+    _updateBody(snapshot) {
+        const html = this._renderBody(snapshot);
+
+        this.$el.find(CLS_DASHBOARD_BODY).html(html);
     }
 
     _updateChart({ count, timestamp }) {
@@ -101,6 +94,15 @@ class RealTimeDashboard extends BaseDashboard {
 
         series.addPoint([time, count], true, isShift);
     }
+}
+
+RealTimeDashboard.start = function start(options) {
+    const client = new DoormanMasterClient();
+    const dashboard = new RealTimeDashboard(options, client);
+
+    dashboard.onLoad();
+
+    return dashboard;
 }
 
 export default RealTimeDashboard;
