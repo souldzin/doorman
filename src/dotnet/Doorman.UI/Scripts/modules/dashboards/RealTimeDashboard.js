@@ -22,10 +22,13 @@ class RealTimeDashboard {
     _onLoad() {
         this._client.fetchRoom(this._roomID)
             .then((room) => {
-                this._room = room;
                 this._chart = this._createChart();
                 this._updateBody(room);
-            });
+            })
+            .catch((e) => {
+                alert(`Failed to lookup room ${this._roomID}`);
+                console.log(e);
+            })
     }
 
     _createChart() {
@@ -72,16 +75,18 @@ class RealTimeDashboard {
         this._updateBody(snapshot);
     }
 
-    _renderBody(snapshot) {
+    _renderBody(room) {
         return template({
-            count: snapshot.count,
-            timestamp: snapshot.timestamp.toLocaleString(),
-            room: "EMSE Room (ID: 12)"
+            count: room.occupancyCount,
+            timestamp: room.lastSnapshotAt
+                ? new Date(room.lastSnapshotAt).toLocaleString()
+                : "",
+            room: `${room.roomName} (ID: ${room.roomID})`
         });
     }
 
-    _updateBody(snapshot) {
-        const html = this._renderBody(snapshot);
+    _updateBody(room) {
+        const html = this._renderBody(room);
 
         this.$el.find(CLS_DASHBOARD_BODY).html(html);
     }
@@ -98,7 +103,8 @@ class RealTimeDashboard {
 
 RealTimeDashboard.start = function start($element) {
     const client = new DoormanMasterClient();
-    const roomID = new URL(location.href).query.roomID;
+    const roomID = new URL(location.href, true).query.roomID;
+    console.log(`Room id in RealTimeDashboard - ${roomID}`);
     const dashboard = new RealTimeDashboard($element, roomID, client);
 
     return dashboard;

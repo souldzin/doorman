@@ -25,16 +25,24 @@ namespace Doorman.Master
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+		// constants
+		// -----------------------------------
+		public const String DB_TYPE_IN_MEMORY = "memory";
 
+		// static props
+		// -----------------------------------
         public static IConfiguration Configuration { get; private set; }
 
 		public static String ConfigDbType => Configuration["development:databaseType"];
 
 		public static String ConfigDbName => Configuration["development:databaseName"] ?? "doormandb";
+
+		// instance
+		// ------------------------------------
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -72,7 +80,7 @@ namespace Doorman.Master
 	            castResolver.NamingStrategy = null;
             });
 
-	        services.AddDbContext<DoormanContext>(ConfigDbType == "memory"
+	        services.AddDbContext<DoormanContext>(ConfigDbType == DB_TYPE_IN_MEMORY
 				? (Action<DbContextOptionsBuilder>)UseInMemoryDatabase
 				: UseSqlServerDatabase
 			);

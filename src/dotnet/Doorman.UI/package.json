@@ -15,6 +15,7 @@
     "webpack-cli": "^2.0.12"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "highcharts": "^6.0.7",
     "hogan.js": "^3.0.2",
     "url-parse": "^1.2.0"

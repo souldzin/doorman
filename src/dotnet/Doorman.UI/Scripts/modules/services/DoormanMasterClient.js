@@ -1,23 +1,32 @@
+import URL from 'url-parse';
+import { getMasterURL } from "../environment";
+import axios from "axios";
+
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 class DoormanMasterClient {
-    constructor() {
+    constructor(baseURL) {
+        baseURL = baseURL || getMasterURL();
 
+        console.log(`base url is ${baseURL}`); 
+        
+        this._axios = axios.create({
+            baseURL: baseURL
+        });
     }
 
-    fetchRoom(roomID) {
-        return fetch({
-            type: "GET",
-            url: ""
-        })
-        return Promise.resolve(roomID);        
+    fetchRoom(roomId) {
+        return (this._axios
+            .get("/room", {
+                params: {
+                    roomId: roomId
+                }
+            })
+            .then((x) => x.data)
+        );
     }
 
     fetchRecentTrendData(roomId) {
-        // ...
-    }
-
-    connectToWebSocket(roomId) {
         // ...
     }
 
