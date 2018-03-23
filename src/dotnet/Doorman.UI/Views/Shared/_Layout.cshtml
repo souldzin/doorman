@@ -30,8 +30,8 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li><a asp-area="" asp-controller="Dashboard" asp-action="RealTime">Real-time Occupancy</a></li>
-                    <li><a asp-area="" asp-controller="Dashboard" asp-action="Historic">Historic Occupancy</a></li>
+                    <li><a href="#" data-toggle="modal" data-target="#select-room-modal" data-destination="@Url.Action("RealTime", "Dashboard")">Real-time Occupancy</a></li>
+                    <li><a href="#" data-toggle="modal" data-target="#select-room-modal" data-destination="@Url.Action("Historic", "Dashboard")">Historic Occupancy</a></li>
                 </ul>
             </div>
         </div>
@@ -43,7 +43,28 @@
             <p>&copy; 2018 - Doorman</p>
         </footer>
     </div>
-
+    <!-- Modals -->
+    <div id="select-room-modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Please enter a room ID:</h4>
+                </div>
+                <form>
+                    <input type="hidden" name="destination" />
+                    <div class="modal-body">
+                            <input type="text" class="form-control" name="roomID" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Ok</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Scripts -->
     <environment include="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
@@ -63,6 +84,9 @@
         </script>
     </environment>
     <script src="~/js/main.bundle.js"></script>
+    <script>
+        Doorman.UI.start();
+    </script>
 
     @RenderSection("Scripts", required: false)
 </body>
