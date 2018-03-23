@@ -47,20 +47,6 @@ namespace Doorman.Master
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-	        services
-		        .AddAuthentication(options =>
-		        {
-			        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-			        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-		        })
-		        .AddJwtBearer(options => { options.TokenValidationParameters = TokenBuilder.TokenValidationParams; });
-
-	        services.AddAuthorization(options =>
-	        {
-		        options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
-			        .RequireAuthenticatedUser().Build();
-	        });
-
 			services.AddSignalR();
 	        services.AddCors(options =>
 	        {
@@ -72,13 +58,13 @@ namespace Doorman.Master
 	        });
 
 			services.AddMvc().AddJsonOptions(o =>
-            {
-				if(o.SerializerSettings.ContractResolver == null)
-					return;
+				{
+					if(o.SerializerSettings.ContractResolver == null)
+						return;
 
-	            var castResolver = o.SerializerSettings.ContractResolver as DefaultContractResolver;
-	            castResolver.NamingStrategy = null;
-            });
+					var castResolver = o.SerializerSettings.ContractResolver as DefaultContractResolver;
+					castResolver.NamingStrategy = null;
+				});
 
 	        services.AddDbContext<DoormanContext>(ConfigDbType == DB_TYPE_IN_MEMORY
 				? (Action<DbContextOptionsBuilder>)UseInMemoryDatabase
