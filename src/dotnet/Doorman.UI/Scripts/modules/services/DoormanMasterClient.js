@@ -1,17 +1,16 @@
 import URL from 'url-parse';
 import { getMasterURL } from "../environment";
 import axios from "axios";
+import * as signalR from '@aspnet/signalr-client';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 class DoormanMasterClient {
     constructor(baseURL) {
-        baseURL = baseURL || getMasterURL();
+        this._baseURL = baseURL || getMasterURL();
 
-        console.log(`base url is ${baseURL}`); 
-        
         this._axios = axios.create({
-            baseURL: baseURL
+            baseURL: this._baseURL
         });
     }
 
@@ -39,6 +38,32 @@ class DoormanMasterClient {
             peakWeekday: WEEKDAYS[Math.floor(Math.random() * WEEKDAYS.length)],
             peakTime: `${Math.floor(Math.random()*24)}:${Math.floor(Math.random()*60)}`
         });
+    }
+
+    connectToWebSocket(roomId) {
+        var url = this._getWebSocketURL();
+        var logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
+        var doormanHub = new signalR.HttpConnection(url);
+        var doormanConnection = new signalR.HubConnection(doormanHub, logger);
+
+        doormanConnection.on('Broadcast', (result) => {
+            console.log(result);
+        });
+
+        return (
+            doormanConnection
+                .start({ transport: ['webSockets', 'serverSentEvents', 'longPolling'] })
+                .catch(err => {
+                    console.log(err + 'connection error');
+                })
+        );
+    }
+
+    _getWebSocketURL() {
+        const url = new URL(this._baseURL);
+        url.pathname = "/doorman";
+        url.query = {};
+        return url.toString();
     }
 }
 

@@ -21,14 +21,17 @@ class RealTimeDashboard {
 
     _onLoad() {
         this._client.fetchRoom(this._roomID)
-            .then((room) => {
-                this._chart = this._createChart();
-                this._updateBody(room);
-            })
             .catch((e) => {
                 alert(`Failed to lookup room ${this._roomID}`);
                 console.log(e);
+                throw e;
             })
+            .then((room) => {
+                this._chart = this._createChart();
+                this._updateBody(room);
+
+                return this._client.connectToWebSocket(this._roomID);
+            });
     }
 
     _createChart() {

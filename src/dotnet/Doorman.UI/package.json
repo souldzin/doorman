@@ -12,9 +12,10 @@
   "devDependencies": {
     "mustache-loader": "^1.4.0",
     "webpack": "4.1.1",
-    "webpack-cli": "^2.0.12"
+    "webpack-cli": "^2.0.13"
   },
   "dependencies": {
+    "@aspnet/signalr-client": "1.0.0-alpha2-final",
     "axios": "^0.18.0",
     "highcharts": "^6.0.7",
     "hogan.js": "^3.0.2",
