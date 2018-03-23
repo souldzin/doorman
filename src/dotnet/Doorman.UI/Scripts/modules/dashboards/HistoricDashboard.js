@@ -60,7 +60,7 @@ class HistoricDashboard {
             return;
         }
 
-        this._client.getHistoricStats(0, start, end)
+        this._client.fetchHistoricStats(0, start, end)
             .then((x) => {
                 return toStringObjectValues(x);
             })

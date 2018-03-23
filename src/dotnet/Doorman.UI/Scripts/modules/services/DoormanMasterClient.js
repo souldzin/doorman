@@ -1,12 +1,19 @@
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 class DoormanMasterClient {
+    constructor() {
 
-    getRoom(roomId) {
-        // ... return AJAX request to server
     }
 
-    getRecentTrendData(roomId) {
+    fetchRoom(roomID) {
+        return fetch({
+            type: "GET",
+            url: ""
+        })
+        return Promise.resolve(roomID);        
+    }
+
+    fetchRecentTrendData(roomId) {
         // ...
     }
 
@@ -14,7 +21,7 @@ class DoormanMasterClient {
         // ...
     }
 
-    getHistoricStats(roomId, startDate, endDate) {
+    fetchHistoricStats(roomId, startDate, endDate) {
         return Promise.resolve({
             average: Math.round(Math.random() * 30 + 5),
             stdev: Math.round(Math.random() *10 + 4),

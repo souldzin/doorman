@@ -21,7 +21,7 @@ function submitForm($form) {
         return Promise.reject(new Error("Tried to submit form with no room ID."));
     }
 
-    const url = getURL(data.destination, data.roomID);
+    const url = getDestinationURL(data.destination, data.roomID);
     location.href = url;
 
     return Promise.resolve();

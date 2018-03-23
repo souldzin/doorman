@@ -1,6 +1,7 @@
 import * as Highcharts from 'highcharts';
 import DoormanMasterClient from '../services/DoormanMasterClient';
 import template from './RealTimeDashboard.mustache';
+import URL from 'url-parse';
 
 require('highcharts/modules/series-label')(Highcharts);
 
@@ -10,22 +11,21 @@ const CLS_DASHBOARD_BODY = '.dashboard-body';
 const CLS_DASHBOARD_CHART = '.dashboard-chart';
 
 class RealTimeDashboard {
-    constructor(options, client) {
-        const { element, roomId } = options;
-
-        this.$el = element;
-        this.roomId = roomId;
+    constructor($element, roomID, client) {
+        this.$el = $element;
+        this._roomID = roomID;
         this._client = client;
+
+        this._onLoad();
     }
 
-    onLoad() {
-        this._chart = this._createChart();
-
-        this._generate();
-        
-        this._interval = setInterval(() => {
-            this._generate();
-        }, 3000);
+    _onLoad() {
+        this._client.fetchRoom(this._roomID)
+            .then((room) => {
+                this._room = room;
+                this._chart = this._createChart();
+                this._updateBody(room);
+            });
     }
 
     _createChart() {
@@ -96,11 +96,10 @@ class RealTimeDashboard {
     }
 }
 
-RealTimeDashboard.start = function start(options) {
+RealTimeDashboard.start = function start($element) {
     const client = new DoormanMasterClient();
-    const dashboard = new RealTimeDashboard(options, client);
-
-    dashboard.onLoad();
+    const roomID = new URL(location.href).query.roomID;
+    const dashboard = new RealTimeDashboard($element, roomID, client);
 
     return dashboard;
 }
