@@ -67,10 +67,6 @@ class App extends React.Component {
                     <h1>Entryway Sensor 2</h1>
                     <FrameDisplay />
                 </div>
-                <div className="home-item">
-                    <h1>Displacement Sensor</h1>
-                    <FrameDisplay />
-                </div>
             </div>
         );
     }
