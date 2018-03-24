@@ -1,5 +1,5 @@
 {
-  "name": "doorman-room-monitor-client",
+  "name": "doorman-room-monitor-dev",
   "version": "1.0.0",
   "description": "The room monitor dev client for the room monitor server",
   "main": "lib/index.js",
