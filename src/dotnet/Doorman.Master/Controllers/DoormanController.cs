@@ -62,7 +62,8 @@ namespace Doorman.Master.Controllers
 		#endregion
 
 		#region Room UI APIs
-	    [HttpGet("room", Name = "GetRoom")]
+	    [HttpGet("room")]
+	    [HttpGet("room/{roomId}", Name = "GetRoom")]
 	    public IActionResult GetRoom(int roomId) //Get information for the room with the given ID
 	    {
 		    var result = _doormanService.GetRoom(roomId);
