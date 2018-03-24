@@ -26,7 +26,14 @@ class DoormanMasterClient {
     }
 
     fetchRecentTrendData(roomId) {
-        // ...
+        return (this._axios
+            .get(`/room/${roomId}/recentTrend`, {
+                params: {
+                    seconds: 3600 // 1 hour
+                }
+            })
+            .then((x) => x.data)
+        )        
     }
 
     fetchHistoricStats(roomId, startDate, endDate) {
@@ -40,15 +47,13 @@ class DoormanMasterClient {
         });
     }
 
-    connectToWebSocket(roomId) {
+    connectToWebSocket(roomId, callback) {
         var url = this._getWebSocketURL();
         var logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
         var doormanHub = new signalR.HttpConnection(url);
         var doormanConnection = new signalR.HubConnection(doormanHub, logger);
 
-        doormanConnection.on('Broadcast', (result) => {
-            console.log(result);
-        });
+        doormanConnection.on(roomId, callback);
 
         return (
             doormanConnection

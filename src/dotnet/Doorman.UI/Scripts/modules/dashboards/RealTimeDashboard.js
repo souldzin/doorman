@@ -28,14 +28,23 @@ class RealTimeDashboard {
             })
             .then((room) => {
                 this._chart = this._createChart();
-                this._updateBody(room);
+                this._onRoomUpdate(room);
 
-                return this._client.connectToWebSocket(this._roomID);
+                this._ws = this._client.connectToWebSocket(this._roomID, (room) => this._onRoomUpdate(room));
+            });
+    }
+
+    _onRoomUpdate(room) {
+        this._client.fetchRecentTrendData(room.roomID)
+            .then(({ points }) => {
+                this._updateBody(room);
+                this._updateChartPoints(points);
             });
     }
 
     _createChart() {
         const element = this.$el.find(CLS_DASHBOARD_CHART);
+        const offset = new Date().getTimezoneOffset();
 
         return new Highcharts.Chart({
             chart: {
@@ -48,7 +57,10 @@ class RealTimeDashboard {
             xAxis: {
                 type: 'datetime',
                 tickPixelInterval: 150,
-                minRange: 20000
+                minRange: 20000,
+            },
+            time: {
+                getTimezoneOffset: () => offset
             },
             yAxis: {
                 minPadding: 0.2,
@@ -92,6 +104,18 @@ class RealTimeDashboard {
         const html = this._renderBody(room);
 
         this.$el.find(CLS_DASHBOARD_BODY).html(html);
+    }
+
+    _updateChartPoints(points) {
+        const data = points
+            .map(x => [
+                new Date(x.timestamp).getTime(),
+                x.occupancyCount
+            ]);
+
+        const series = this._chart.series[0];
+        
+        series.setData(data);
     }
 
     _updateChart({ count, timestamp }) {

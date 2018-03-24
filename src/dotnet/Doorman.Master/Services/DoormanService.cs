@@ -252,9 +252,10 @@ namespace Doorman.Master.Services
 		void IDoormanService.SendBroadcast(int roomId)
 		{
 			var currentRoom = ((IDoormanService) this).GetRoom(roomId);
+			var name = roomId.ToString();
 
 			//Components for providing real-time bi-directional communication across the Web
-			_doormanHub.Clients.All.InvokeAsync("Broadcast", currentRoom);
+			_doormanHub.Clients.All.InvokeAsync(name, currentRoom);
 		}
 
 		private double CalculateStandardDeviation(List<int> occupancyCountList)
