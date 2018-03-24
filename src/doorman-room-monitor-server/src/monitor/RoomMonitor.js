@@ -4,9 +4,9 @@ const TYPE_ENTER = "enter";
 const TYPE_EXIT = "exit";
 
 class RoomMonitor {
-    constructor() {
+    constructor(room) {
         const state = {
-            count: 0,
+            count: room.occupancyCount,
             event: null
         };
 

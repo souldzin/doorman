@@ -1,0 +1,7 @@
+{
+    "masterURL": "http://localhost:51681/api/doorman",
+    "clientId": "123",
+    "clientSecret": "youououo",
+    "roomName": "EMSE Fall 2016 Classroom",
+    "roomID": 5
+}

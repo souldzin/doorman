@@ -5,4 +5,4 @@ CLIENT_SECRET=${4:-youououo}
 
 DATA='{"client_id": "'"${CLIENT_ID}"'", "client_secret": "'"${CLIENT_SECRET}"'"}'
 
-echo $(curl -i -v --silent --raw -H "Content-Type: application/json" -X POST -d "${DATA}" "${HOST}/room?=${ROOM_NAME}")
+echo $(curl -i -v --silent --raw -H "Content-Type: application/json" -X POST -d "${DATA}" "${HOST}/room?name=${ROOM_NAME}")
