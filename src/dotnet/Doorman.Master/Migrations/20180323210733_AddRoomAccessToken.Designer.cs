@@ -11,9 +11,10 @@ using System;
 namespace Doorman.Master.Migrations
 {
     [DbContext(typeof(DoormanContext))]
-    partial class DoormanContextModelSnapshot : ModelSnapshot
+    [Migration("20180323210733_AddRoomAccessToken")]
+    partial class AddRoomAccessToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

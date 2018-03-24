@@ -25,34 +25,28 @@ namespace Doorman.Master
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
+		// constants
+		// -----------------------------------
+		public const String DB_TYPE_IN_MEMORY = "memory";
 
+		// static props
+		// -----------------------------------
         public static IConfiguration Configuration { get; private set; }
 
 		public static String ConfigDbType => Configuration["development:databaseType"];
 
 		public static String ConfigDbName => Configuration["development:databaseName"] ?? "doormandb";
 
+		// instance
+		// ------------------------------------
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-	        services
-		        .AddAuthentication(options =>
-		        {
-			        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-			        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-		        })
-		        .AddJwtBearer(options => { options.TokenValidationParameters = TokenBuilder.TokenValidationParams; });
-
-	        services.AddAuthorization(options =>
-	        {
-		        options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
-			        .RequireAuthenticatedUser().Build();
-	        });
-
 			services.AddSignalR();
 	        services.AddCors(options =>
 	        {
@@ -64,15 +58,15 @@ namespace Doorman.Master
 	        });
 
 			services.AddMvc().AddJsonOptions(o =>
-            {
-				if(o.SerializerSettings.ContractResolver == null)
-					return;
+				{
+					if(o.SerializerSettings.ContractResolver == null)
+						return;
 
-	            var castResolver = o.SerializerSettings.ContractResolver as DefaultContractResolver;
-	            castResolver.NamingStrategy = null;
-            });
+					var castResolver = o.SerializerSettings.ContractResolver as DefaultContractResolver;
+					castResolver.NamingStrategy = null;
+				});
 
-	        services.AddDbContext<DoormanContext>(ConfigDbType == "memory"
+	        services.AddDbContext<DoormanContext>(ConfigDbType == DB_TYPE_IN_MEMORY
 				? (Action<DbContextOptionsBuilder>)UseInMemoryDatabase
 				: UseSqlServerDatabase
 			);

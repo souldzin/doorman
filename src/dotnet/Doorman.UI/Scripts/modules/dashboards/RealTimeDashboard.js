@@ -1,6 +1,7 @@
 import * as Highcharts from 'highcharts';
 import DoormanMasterClient from '../services/DoormanMasterClient';
 import template from './RealTimeDashboard.mustache';
+import URL from 'url-parse';
 
 require('highcharts/modules/series-label')(Highcharts);
 
@@ -10,26 +11,40 @@ const CLS_DASHBOARD_BODY = '.dashboard-body';
 const CLS_DASHBOARD_CHART = '.dashboard-chart';
 
 class RealTimeDashboard {
-    constructor(options, client) {
-        const { element, roomId } = options;
-
-        this.$el = element;
-        this.roomId = roomId;
+    constructor($element, roomID, client) {
+        this.$el = $element;
+        this._roomID = roomID;
         this._client = client;
+
+        this._onLoad();
     }
 
-    onLoad() {
-        this._chart = this._createChart();
+    _onLoad() {
+        this._client.fetchRoom(this._roomID)
+            .catch((e) => {
+                alert(`Failed to lookup room ${this._roomID}`);
+                console.log(e);
+                throw e;
+            })
+            .then((room) => {
+                this._chart = this._createChart();
+                this._onRoomUpdate(room);
 
-        this._generate();
-        
-        this._interval = setInterval(() => {
-            this._generate();
-        }, 3000);
+                this._ws = this._client.connectToWebSocket(this._roomID, (room) => this._onRoomUpdate(room));
+            });
+    }
+
+    _onRoomUpdate(room) {
+        this._client.fetchRecentTrendData(room.roomID)
+            .then(({ points }) => {
+                this._updateBody(room);
+                this._updateChartPoints(points);
+            });
     }
 
     _createChart() {
         const element = this.$el.find(CLS_DASHBOARD_CHART);
+        const offset = new Date().getTimezoneOffset();
 
         return new Highcharts.Chart({
             chart: {
@@ -42,7 +57,10 @@ class RealTimeDashboard {
             xAxis: {
                 type: 'datetime',
                 tickPixelInterval: 150,
-                minRange: 20000
+                minRange: 20000,
+            },
+            time: {
+                getTimezoneOffset: () => offset
             },
             yAxis: {
                 minPadding: 0.2,
@@ -72,18 +90,32 @@ class RealTimeDashboard {
         this._updateBody(snapshot);
     }
 
-    _renderBody(snapshot) {
+    _renderBody(room) {
         return template({
-            count: snapshot.count,
-            timestamp: snapshot.timestamp.toLocaleString(),
-            room: "EMSE Room (ID: 12)"
+            count: room.occupancyCount,
+            timestamp: room.lastSnapshotAt
+                ? new Date(room.lastSnapshotAt).toLocaleString()
+                : "",
+            room: `${room.roomName} (ID: ${room.roomID})`
         });
     }
 
-    _updateBody(snapshot) {
-        const html = this._renderBody(snapshot);
+    _updateBody(room) {
+        const html = this._renderBody(room);
 
         this.$el.find(CLS_DASHBOARD_BODY).html(html);
+    }
+
+    _updateChartPoints(points) {
+        const data = points
+            .map(x => [
+                new Date(x.timestamp).getTime(),
+                x.occupancyCount
+            ]);
+
+        const series = this._chart.series[0];
+        
+        series.setData(data);
     }
 
     _updateChart({ count, timestamp }) {
@@ -96,11 +128,11 @@ class RealTimeDashboard {
     }
 }
 
-RealTimeDashboard.start = function start(options) {
+RealTimeDashboard.start = function start($element) {
     const client = new DoormanMasterClient();
-    const dashboard = new RealTimeDashboard(options, client);
-
-    dashboard.onLoad();
+    const roomID = new URL(location.href, true).query.roomID;
+    console.log(`Room id in RealTimeDashboard - ${roomID}`);
+    const dashboard = new RealTimeDashboard($element, roomID, client);
 
     return dashboard;
 }

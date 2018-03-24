@@ -15,11 +15,13 @@ namespace Doorman.Master.Services
 	{
 		private readonly IHubContext<DoormanHub> _doormanHub;
 		private readonly IDoormanContext _context;
+		private readonly RandomTokenBuilder _tokenBuilder;
 
 		public DoormanService(IDoormanContext context, IHubContext<DoormanHub> doormanHub)
 		{
 			_context = context;
 			_doormanHub = doormanHub;
+			_tokenBuilder = new RandomTokenBuilder();
 		}
 
 		IReadOnlyList<RoomVM> IDoormanService.GetRooms()
@@ -27,23 +29,14 @@ namespace Doorman.Master.Services
 			return Mapper.Map<IReadOnlyList<RoomVM>>(_context.Rooms.ToList());
 		}
 
-		PostRoomOccupancySnapshotResultsVM IDoormanService.SaveRoomOccupancySnapshot(PostRoomOccupancySnapshotVM model)
+		PostRoomOccupancySnapshotResultsVM IDoormanService.SaveRoomOccupancySnapshot(int roomId, PostRoomOccupancySnapshotVM model)
 		{
-			var result = new PostRoomOccupancySnapshotResultsVM();
+			var dbModel = Mapper.Map<PostRoomOccupancySnapshotVM, RoomOccupancySnapshot>(model);
+			dbModel.RoomId = roomId;
+			_context.RoomOccupancySnapshots.Add(dbModel);
+			_context.SaveChanges();
 
-			try
-			{
-				var dbModel = Mapper.Map<PostRoomOccupancySnapshotVM, RoomOccupancySnapshot>(model);
-				_context.RoomOccupancySnapshots.Add(dbModel);
-				_context.SaveChanges();
-
-				return result;
-			}
-			catch (Exception ex)
-			{
-				result.Success = false;
-				return null;
-			}
+			return new PostRoomOccupancySnapshotResultsVM();
 		}
 
 		PostRoomOccupancySnapshotResultsVM IDoormanService.GetRoomOccupancySnapshotById(int roomOccupancySnapshotId)
@@ -98,7 +91,8 @@ namespace Doorman.Master.Services
 				{
 					dbModel = new Room
 					{
-						Description = name
+						Description = name,
+						AccessToken = GetAccessToken()
 					};
 
 					_context.Rooms.Add(dbModel);
@@ -108,10 +102,7 @@ namespace Doorman.Master.Services
 					result = Mapper.Map<Room, PostRoomResultVM>(dbModel);
 				}
 
-				result.AccessToken = GetAccessToken(dbModel.RoomId, model);
-
 				return result;
-
 			}
 			catch (Exception ex)
 			{
@@ -119,9 +110,9 @@ namespace Doorman.Master.Services
 			}
 		}
 
-		private string GetAccessToken(int roomId, ClientConfigVM model)
+		private string GetAccessToken()
 		{
-			return TokenBuilder.CreateToken(roomId, model);
+			return this._tokenBuilder.GenerateToken();
 		}
 
 		GetRoomResultVM IDoormanService.GetRoom(int roomId)
@@ -261,9 +252,10 @@ namespace Doorman.Master.Services
 		void IDoormanService.SendBroadcast(int roomId)
 		{
 			var currentRoom = ((IDoormanService) this).GetRoom(roomId);
+			var name = roomId.ToString();
 
 			//Components for providing real-time bi-directional communication across the Web
-			_doormanHub.Clients.All.InvokeAsync("Broadcast", currentRoom);
+			_doormanHub.Clients.All.InvokeAsync(name, currentRoom);
 		}
 
 		private double CalculateStandardDeviation(List<int> occupancyCountList)
@@ -279,7 +271,7 @@ namespace Doorman.Master.Services
 	public interface IDoormanService
 	{
 		IReadOnlyList<RoomVM> GetRooms();
-		PostRoomOccupancySnapshotResultsVM SaveRoomOccupancySnapshot(PostRoomOccupancySnapshotVM model);
+		PostRoomOccupancySnapshotResultsVM SaveRoomOccupancySnapshot(int roomId, PostRoomOccupancySnapshotVM model);
 		IReadOnlyList<PostRoomOccupancySnapshotResultsVM> GetAll();
 		PostRoomOccupancySnapshotResultsVM GetRoomOccupancySnapshotById(int roomOccupancySnapshotId);
 		PostRoomResultVM RegisterRoom(string name, ClientConfigVM model);

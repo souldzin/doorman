@@ -25,22 +25,17 @@ namespace Doorman.Master.Controllers
 	    }
 
 		#region Room Monitor APIs
-		[HttpPost("room/current/snapshot")]
-        public IActionResult Post([FromBody]PostRoomOccupancySnapshotVM model) //Submit an occupancy snapshot for the authorized room
+		[HttpPost("room/{roomId}/snapshot")]
+        public IActionResult Post(int roomId, [FromBody] PostRoomOccupancySnapshotVM model) //Submit an occupancy snapshot for the authorized room
         {
 	        if (model == null)
 	        {
 		        return BadRequest();
 	        }
 
-	        var result = _doormanService.SaveRoomOccupancySnapshot(model);
+	        var result = _doormanService.SaveRoomOccupancySnapshot(roomId, model);
 
-	        if (result == null)
-	        {
-		        return NotFound();
-	        }
-
-			_doormanService.SendBroadcast(model.RoomId);
+			_doormanService.SendBroadcast(roomId);
 
 	        return Ok(result);
         }

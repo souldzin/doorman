@@ -25,6 +25,7 @@ namespace Doorman.Master.Profiles
 			    .ForMember(dest => dest.RoomId, opt => opt.Ignore())
 			    .ForMember(dest => dest.RoomName, opt => opt.Ignore())
 			    .ForMember(dest => dest.OccupancyCount, opt => opt.MapFrom(src => src.Count))
+				.ForMember(dest => dest.LastSnapshotAt, opt => opt.MapFrom(src => src.CreateDateTime))
 				;
 
 		    CreateMap<RoomOccupancySnapshot, RoomOccupancySnapshotVM>()

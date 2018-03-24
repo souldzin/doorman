@@ -3,13 +3,18 @@
 }
 @section Scripts{
     <script>
-        Doorman.UI.RealTimeDashboard.start({
-            roomId: 0,
-            element: $("#dashboard")
-        });    
+        Doorman.UI.RealTimeDashboard.start($("#dashboard"));    
     </script>
 }
 <div class="container doorman-dashboard" id="dashboard">
-    <div class="dashboard-body"></div>
+    <div class="dashboard-body">
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="text-center">
+                    <i class="fas fa-spinner fa-pulse"></i>
+                </h3>
+            </div>
+        </div>
+    </div>
     <div class="dashboard-chart"></div>
 </div>

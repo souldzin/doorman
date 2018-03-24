@@ -14,5 +14,7 @@ namespace Doorman.Master.Models
 	    public string RoomName { get; set; }
 	    [JsonProperty(PropertyName = "occupancyCount")]
 	    public int OccupancyCount { get; set; }
+		[JsonProperty(PropertyName = "lastSnapshotAt")]
+		public DateTime? LastSnapshotAt { get; set; }
 	}
 }

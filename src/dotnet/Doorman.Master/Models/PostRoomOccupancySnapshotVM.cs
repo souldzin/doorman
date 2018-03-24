@@ -8,8 +8,6 @@ namespace Doorman.Master.Models
 {
     public class PostRoomOccupancySnapshotVM
     {
-		[JsonProperty(PropertyName = "roomID")]
-	    public int RoomId { get; set; }
 	    [JsonProperty(PropertyName = "occupancyCount")]
 		public int OccupancyCount { get; set; }
 	}

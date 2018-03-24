@@ -15,5 +15,6 @@ namespace Doorman.Master.Entities
 		public int RoomId { get; set; }
 		[Required]
 		public string Description { get; set; }
+		public string AccessToken { get; set; }
     }
 }
