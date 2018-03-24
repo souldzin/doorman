@@ -3,7 +3,7 @@ from rx import Observable
 
 BOUNDARY_MIN = (22*64)
 BOUNDARY_OFFSET = 60
-current_boundary = 0
+CURRENT_BOUNDARY = 0
 
 def get_next_state(state, next_zone):
     prev_time = state["time"]
@@ -39,11 +39,13 @@ def get_zone(frame):
     return "low" if value < boundary else "high"
 
 def get_boundary(value):
+    global CURRENT_BOUNDARY
+
     if(value < BOUNDARY_MIN):
         return BOUNDARY_MIN
 
-    boundary = max(BOUNDARY_MIN, min(current_boundary, value)) 
-    current_boundary = boundary
+    boundary = max(BOUNDARY_MIN, min(CURRENT_BOUNDARY, value)) if CURRENT_BOUNDARY > 0 else value
+    CURRENT_BOUNDARY = boundary
     return boundary + BOUNDARY_OFFSET
 
 def scan_frames(frames):
