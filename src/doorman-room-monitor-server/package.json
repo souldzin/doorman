@@ -7,15 +7,16 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "nodemon src/server/index.js 9080",
-    "start": "node src/server/index.js 9080"
+    "dev": "nodemon src/server/index.js --port 9080",
+    "start": "node src/server/index.js --port 9080"
   },
   "dependencies": {
     "axios": "^0.18.0",
     "body-parser": "^1.18.2",
     "express": "4.16.2",
     "rxjs": "^5.5.6",
-    "socket.io": "2.0.4"
+    "socket.io": "2.0.4",
+    "yargs": "^11.0.0"
   },
   "devDependencies": {
     "nodemon": "1.15.1"
