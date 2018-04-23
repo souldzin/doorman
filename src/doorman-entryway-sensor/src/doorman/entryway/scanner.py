@@ -1,5 +1,6 @@
 import time
 import math
+from collections import deque
 from rx import Observable
 
 BOUNDARY_MIN = (22*64)
@@ -10,11 +11,11 @@ BASELINE_INDEX = 20
 
 class FrameCell:
     __slots__ = ['x', 'y', 'value', 'clusters', 'cluster_id', 'cluster_weight']
-    def __init__(self, x, y, value, clusters = None):
+    def __init__(self, x, y, value):
         self.x = x
         self.y = y
         self.value = value
-        self.clusters = clusters if clusters else dict()
+        self.clusters = dict()
         self.cluster_id = -1
         self.cluster_weight = 0
 
@@ -67,11 +68,11 @@ def get_top_cells(cells):
         x 
         for x 
         in (
-            FrameCell(x.x, x.y, (2 * (x.value - baseline) - 2), x.clusters)
+            FrameCell(x.x, x.y, x.value - baseline)
             for x
             in cells_sorted[BASELINE_INDEX:] #Optimizing here...
         )
-        if x.value > 0
+        if x.value > 1
     ]
 
     return cells_top
@@ -97,25 +98,36 @@ def get_surrounding_indexes(cell):
 
     return idxs
 
-def set_cluster_assignment(cells, cell, cluster_id):
+def get_neighbors(cells, cell, cluster_id):
     idxs = get_surrounding_indexes(cell)
     neighbors = [
         neighbor
         for neighbor
         in (cells[idx[0]][idx[1]] for idx in idxs)
-        if not (neighbor is None or cluster_id in neighbor.clusters)
+        if neighbor is not None
     ]
+    return neighbors
 
-    for neighbor in neighbors:
-        distance = abs(cell.value - neighbor.value)
-        if neighbor.x != cell.x and neighbor.y != cell.y:
-            distance += 0.5
+def set_cluster_assignment(cells, root_cell, cluster_id):
+    neighbor_queue = deque()
+    neighbor_queue.append((root_cell, get_neighbors(cells, root_cell, cluster_id)))
+    visits = {root_cell}
 
-        weight = cell.clusters[cluster_id] * (1 / (distance + 1))
-        neighbor.clusters[cluster_id] = weight
+    while len(neighbor_queue) > 0:
+        (cell, neighbors) = neighbor_queue.popleft()
 
-    for neighbor in neighbors:
-        set_cluster_assignment(cells, neighbor, cluster_id)
+        neighbors = sorted((x for x in neighbors if x not in visits), key=lambda x: x.value, reverse=True)
+
+        for neighbor in neighbors:
+            distance = abs(cell.value - neighbor.value) / cell.value
+            weight = cell.clusters[cluster_id] * (1 - min(distance / 2, 1))
+            weight = max(0, weight - 0.1)
+            neighbor.clusters[cluster_id] = weight
+
+            visits.add(neighbor)
+
+            neighbor_queue.append((neighbor, get_neighbors(cells, neighbor, cluster_id)))
+
 
 def find_clusters(frame):
     # What is the baseline?
@@ -124,15 +136,15 @@ def find_clusters(frame):
     cells = to_cells(frame)
     cells_top = get_top_cells(cells)
     cells = to_matrix(cells_top)
-    max_value = cells_top[0].value if len(cells_top) > 0 else 1
+    max_value = cells_top[len(cells_top) - 1].value if len(cells_top) > 0 else 1
 
     # Build cluster probabilities
     for cell in reversed(cells_top):
-        if len(cell.clusters) > 0:
+        if len(cell.clusters) > 0 and max(cell.clusters.values()) > 0.1:
             continue
         
         # Create a new cluster for this cell
-        cell.clusters[cluster_count] = cell.value / max_value
+        cell.clusters[cluster_count] = (cell.value / max_value) ** 3
         set_cluster_assignment(cells, cell, cluster_count)
         cluster_count += 1
     
@@ -140,8 +152,9 @@ def find_clusters(frame):
     for cell in cells_top:
         cluster_id = max(cell.clusters, key=cell.clusters.get)
         cluster_weight = cell.clusters[cluster_id]
-        # Don't do anything if the prob is less than 1...
-        if cluster_weight < 0.3:
+
+        # Cut off low weighted cells
+        if cluster_weight < 0.35:
             continue
 
         cell.cluster_id = cluster_id
@@ -151,9 +164,7 @@ def find_clusters(frame):
             clusters[cluster_id] = []
         clusters[cluster_id].append(cell)
 
-    print("--------------------------------")
-    print_matrix(cells, lambda x: round(x.cluster_weight, 2) if x.cluster_id >= 0 else "-")
-    print("--------------------------------")
+    # print_matrix(cells, lambda x: round(x.cluster_id, 2) if x.cluster_id >= 0 else "-")
 
     return [create_cluster(key, cells) for (key, cells) in clusters.items()]
 
@@ -183,8 +194,8 @@ def scan_frames(frames):
         "event": None
     }
 
-    # .do_action(lambda clusters: print_matrix(clusters, lambda x: x.cluster_id)) \
     return frames.map(find_clusters) \
         .map(to_matrix) \
+        .do_action(lambda clusters: print_matrix(clusters, lambda x: x.cluster_id)) \
         .map(lambda x: None) \
         .where(lambda x: x is not None) 
