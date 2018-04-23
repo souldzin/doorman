@@ -1,5 +1,6 @@
 import sys
 import time
+import traceback
 from rx import Observable
 from rx.concurrency import ThreadPoolScheduler
 from rx.core import Scheduler
@@ -26,6 +27,10 @@ def log(msg):
     else:
         print("")
 
+def log_error(e):
+    log("Unexpected error occurred {0}".format(e))
+    traceback.print_exc()
+
 def main():
     arg_endpoint = sys.argv[1] if len(sys.argv) > 1 else None
     arg_sensor_type = sys.argv[2] if len(sys.argv) > 2 else TYPE_REAL
@@ -47,15 +52,15 @@ def main():
     print("subscribing to events...")
     events.subscribe(
         on_next = lambda x: client.post_event(x['type'], x['delta']),
-        on_completed = lambda: log("completed"),
-        on_error = lambda e: log("Unexpected error occurred {0}".format(e))
+        on_completed = lambda: log("completed events"),
+        on_error = log_error
     )
 
     print("subscribing to frames...")
     frames.subscribe(
         on_next = lambda x: client.post_frame(x),
-        on_completed = lambda: log("completed"),
-        on_error = lambda e: log("Unexpected error occurred {0}".format(e))
+        on_completed = lambda: log("completed frames"),
+        on_error = log_error
     )
 
     scheduler.executor.shutdown()
