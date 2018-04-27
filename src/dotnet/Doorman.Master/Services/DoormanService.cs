@@ -135,11 +135,12 @@ namespace Doorman.Master.Services
 					_context.RoomOccupancySnapshots.Where(x => x.RoomId == dbModel.RoomId);
 
 				if (!dbModels.Any())
-					return result;
 				{
-					var snapShot = dbModels.OrderByDescending(x => x.CreateDateTime).First();
-					Mapper.Map<RoomOccupancySnapshot, GetRoomResultVM>(snapShot, result);
+					return result;
 				}
+
+				var snapShot = dbModels.OrderByDescending(x => x.CreateDateTime).First();
+				Mapper.Map<RoomOccupancySnapshot, GetRoomResultVM>(snapShot, result);
 
 				return result;
 
@@ -182,13 +183,13 @@ namespace Doorman.Master.Services
 			var earliest = _context.RoomOccupancySnapshots
 				.Where(x => x.RoomId == roomId)
 				.Where(x => x.CreateDateTime <= startAt)
-				.Select(x => x.CreateDateTime)
+				.Select(x => (DateTime?)x.CreateDateTime)
 				.Max();
 
-			if(earliest == default(DateTime)) {
+			if(!earliest.HasValue) {
 				return startAt;
 			} else {
-				return earliest;
+				return earliest.Value;
 			}
 		}
 
