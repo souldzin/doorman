@@ -6,7 +6,7 @@ TYPE_FILE = "file"
 TYPE_RANDOM = "random"
 TYPE_REAL = "real"
 
-def get_sensor(t, arg1):
+def create_sensor(t, arg1):
     if t == TYPE_REAL:
         return AMG88xxSensor()
     elif t == TYPE_RANDOM:

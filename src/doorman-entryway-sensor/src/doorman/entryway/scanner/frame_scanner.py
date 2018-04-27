@@ -2,6 +2,7 @@ import time
 import math
 from collections import deque
 from rx import Observable
+from .printers import *
 
 BOUNDARY_MIN = (22*64)
 BOUNDARY_OFFSET = 60
@@ -61,6 +62,14 @@ def to_cells(frame):
         in enumerate(frame)
     ]
 
+def to_matrix(cells):
+    matrix = [([None] * FRAME_COLS) for x in range(FRAME_COLS)]
+    
+    for cell in cells:
+        matrix[cell.x][cell.y] = cell
+
+    return matrix
+
 def get_top_cells(cells):
     cells_sorted = sorted(cells, key=lambda x: x.value)
     baseline = cells_sorted[BASELINE_INDEX].value
@@ -77,18 +86,10 @@ def get_top_cells(cells):
 
     return cells_top
 
-def to_matrix(cells):
-    matrix = [([None] * FRAME_COLS) for x in range(FRAME_COLS)]
-    
-    for cell in cells:
-        matrix[cell.x][cell.y] = cell
-
-    return matrix
-
 def create_cluster(cluster_id, cells):
     return FrameCluster(cluster_id, cells)
 
-def get_surrounding_indexes(cell):
+def get_neighbor_indexes(cell):
     idxs = [
         (cell.x - 1, cell.y - 1), (cell.x, cell.y - 1), (cell.x + 1, cell.y - 1),
         (cell.x - 1, cell.y),                           (cell.x + 1, cell.y),
@@ -99,7 +100,7 @@ def get_surrounding_indexes(cell):
     return idxs
 
 def get_neighbors(cells, cell, cluster_id):
-    idxs = get_surrounding_indexes(cell)
+    idxs = get_neighbor_indexes(cell)
     neighbors = [
         neighbor
         for neighbor
@@ -130,7 +131,21 @@ def set_cluster_assignment(cells, root_cell, cluster_id):
 
 
 def find_clusters(frame):
-    # What is the baseline?
+    """
+    find_clusters
+
+    Algorithm description:
+    
+      1. Find the most important cells in the frame (i.e. top cells)
+      2. For each top cell in top cells (starting at the largest): 
+        a. If cell doesn't have a strong cluster assignment:
+          a.1. Recursively calculate the weight of neighboring cells belonging to that cell
+        b. If cell has a strong cluster assignment: 
+          b.1. Leave it alone
+      3. Group each cell that has the same cluster assignment and create a cluster from these cells
+         
+         (This will give you a centroid and weight)
+    """
     cluster_count = 0
     clusters = dict()
     cells = to_cells(frame)
@@ -168,34 +183,13 @@ def find_clusters(frame):
 
     return [create_cluster(key, cells) for (key, cells) in clusters.items()]
 
-def print_array(arr):
-    print(", ".join((str(x) for x in arr)))
+class FrameScanner:
+    def scan(self, frames):
+        initial_state = {}
 
-
-def print_row(row):
-    print("---------------------")
-    print_array((round(x, 2) for x in row))
-    print("---------------------")
-
-def print_matrix(cells, sel=None):
-    if sel is None:
-        sel = lambda x: x
-
-    print("---------------------")
-    for row in cells:
-        print_array([(sel(x) if x is not None else "-") for x in row])
-    print("---------------------")
-
-def scan_frames(frames):
-    initial_state = {
-        "zone": "low",
-        "entered": False,
-        "time": time.time(),
-        "event": None
-    }
-
-    return frames.map(find_clusters) \
-        .map(to_matrix) \
-        .do_action(lambda clusters: print_matrix(clusters, lambda x: x.cluster_id)) \
-        .map(lambda x: None) \
-        .where(lambda x: x is not None) 
+        return (frames
+            .map(find_clusters)
+            .do_action(lambda clusters: print_matrix(to_matrix(clusters), lambda x: x.weight)) \
+            .map(lambda x: None)
+            .where(lambda x: x is not None) 
+        )

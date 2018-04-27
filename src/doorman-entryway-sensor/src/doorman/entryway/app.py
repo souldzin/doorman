@@ -4,10 +4,10 @@ import traceback
 from rx import Observable
 from rx.concurrency import ThreadPoolScheduler
 from rx.core import Scheduler
-from doorman.entryway.sensor import get_sensor
+from doorman.entryway.sensor import create_sensor
 from doorman.entryway.sensor import TYPE_REAL
 from doorman.entryway.monitor_client import MonitorClient
-from doorman.entryway.scanner import scan_frames
+from doorman.entryway.scanner import FrameScanner
 
 def print_usage():
     print(
@@ -17,7 +17,7 @@ Usage:
 
 Arguments:
   - endpoint (Example: "http://localhost:9080/frame")
-  - flag (Example: sensor | random)
+  - flag (Example: real | random | file)
 """
     )
 
@@ -45,9 +45,13 @@ def main():
     scheduler = ThreadPoolScheduler(4)
 
     print("Starting '{0}' sensor...".format(arg_sensor_type))
-    sensor = get_sensor(arg_sensor_type, arg_sensor_arg)
+    sensor = create_sensor(arg_sensor_type, arg_sensor_arg)
+    
+    print("Starting scanner...")
+    scanner = FrameScanner()
+
     frames = sensor.get_frames(scheduler)
-    events = scan_frames(frames)
+    events = scanner.scan(frames)
 
     print("subscribing to events...")
     events.subscribe(
