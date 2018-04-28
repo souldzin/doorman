@@ -4,11 +4,11 @@ from collections import deque
 from rx import Observable
 from .printers import *
 
-BOUNDARY_MIN = (22*64)
-BOUNDARY_OFFSET = 60
-CURRENT_BOUNDARY = 0
-FRAME_COLS = 8
-BASELINE_INDEX = 20
+FRAME_COLS = 8                     # Number of columns in a frame
+BASELINE_INDEX = 20                # This index represents the n'th lowest value in a frame
+CLUSTER_DISTANCE_THRESHOLD = 6     # Cluster pairs won't be considered if their distance exceeds this value
+ENTER = 'enter'
+EXIT = 'exit'
 
 class FrameCell:
     __slots__ = ['x', 'y', 'value', 'clusters', 'cluster_id', 'cluster_weight']
@@ -53,6 +53,34 @@ class FrameCluster:
         self.x = x
         self.y = y
         self.cluster_id = cluster_id
+        self.x_delta = 0
+        self.y_delta = 0
+        self.weight_delta = 0
+        self.life = 0
+        self.orig = None
+        self.type = None
+
+    def set_delta(self, cluster_a):
+        self.x_delta = cluster_a.x_delta / 1.5 + (self.x - cluster_a.x)
+        self.y_delta = cluster_a.y_delta / 1.5 + (self.y - cluster_a.y)
+        self.weight_delta = cluster_a.weight_delta / 2 + (self.weight - cluster_a.weight) / 2
+        self.orig = cluster_a.get_orig().increment()
+        return self
+
+    def increment(self):
+        if(self.life < 100):
+            self.life += 1
+
+        return self
+
+    def get_orig(self):
+        return self.orig if self.orig is not None else self
+
+    def get_next_pos(self):
+        return (self.x + self.x_delta, self.y + self.y_delta)
+
+    def get_next_weight(self):
+        return self.weight + self.weight_delta
 
 def to_cells(frame):
     """Maps each element in the frame to (row, col, val)"""
@@ -129,6 +157,70 @@ def set_cluster_assignment(cells, root_cell, cluster_id):
 
             neighbor_queue.append((neighbor, get_neighbors(cells, neighbor, cluster_id)))
 
+def get_cluster_distance(a, b):
+    (a_x, a_y) = a.get_next_pos()
+    a_weight = a.get_next_weight()
+
+    pos_distance = math.sqrt((a_x - b.x) ** 2 + (a_y - b.y) ** 2)
+    weight_distance = abs(a_weight - b.weight) / a_weight
+    weight_factor = 1 + min(weight_distance, 2)
+
+    return pos_distance * weight_factor
+
+def find_nearest_clusters(prev_clusters, next_clusters):
+    """
+    find_nearest_clusters
+
+    Algorithm description:
+
+      1. Calculate distance between each cluster pair
+      2. For each pair, until they are all assigned, starting with the lowest distance:
+        a. Assign
+        b. Calculate deltas for new cluster
+      3. For each remaining previous cluster
+        a. Add (prev_cluster, None) pair
+      4. For each remaining next cluster
+        a. Add (None, next_cluster) pair
+    """
+    print("finding nearest clusters...")
+    result = []
+    prev_clusters_len = len(prev_clusters)
+    next_clusters_len = len(next_clusters)
+    prev_remaining = set(range(prev_clusters_len))    
+    next_remaining = set(range(next_clusters_len))
+    pairs = []
+
+    for prev_idx, prev_cluster in enumerate(prev_clusters):
+        for next_idx, next_cluster in enumerate(next_clusters):
+            distance = get_cluster_distance(prev_cluster, next_cluster)
+            pairs.append((prev_idx, next_idx, distance))
+
+    pairs = sorted(pairs, key=lambda x: x[2])
+
+    for (prev_idx, next_idx, distance) in pairs:
+        if prev_idx not in prev_remaining or next_idx not in next_remaining:
+            continue
+        if len(prev_remaining) == 0 or len(next_remaining) == 0:
+            break
+
+        prev_cluster = prev_clusters[prev_idx]
+        next_cluster = next_clusters[next_idx]
+
+        prev_remaining.remove(prev_idx)
+        next_remaining.remove(next_idx)
+
+        result.append((prev_cluster, next_cluster.set_delta(prev_cluster)))
+
+    for prev_idx in prev_remaining:
+        prev_cluster = prev_clusters[prev_idx]
+        result.append((prev_cluster, None))
+
+    for next_idx in next_remaining:
+        next_cluster = next_clusters[next_idx]
+        result.append((None, next_cluster))
+
+    return result    
+
 
 def find_clusters(frame):
     """
@@ -183,13 +275,56 @@ def find_clusters(frame):
 
     return [create_cluster(key, cells) for (key, cells) in clusters.items()]
 
+def is_exit(c):
+    orig = c.get_orig()
+
+    if c.type != EXIT and c.x_max > 5 and c.x_delta > 0:
+        orig.type = EXIT
+        return True
+
+    return False
+
+def is_enter(c_from, c_to):
+    if c_from is None:
+        return None
+
+    orig = c_from.get_orig()
+
+    if orig.type != ENTER and orig.life > 3 and orig.x_min > 5 and c_from.x_delta < 0:
+        orig.type = ENTER
+        return True
+
+    return False
+
+def create_exit_event():
+    return {
+        'type': 'exit',
+        'delta': 1
+    }
+
+def create_enter_event():
+    return {
+        'type': 'enter',
+        'delta': 1
+    }
+
+def map_to_event(pair):
+    c_from, c_to = pair
+
+    if c_to is None:
+        return create_exit_event() if is_exit(c_from) else None
+
+    return create_enter_event() if is_enter(c_from, c_to) else None
+
 class FrameScanner:
     def scan(self, frames):
-        initial_state = {}
+        initial_state = []
 
         return (frames
             .map(find_clusters)
-            .do_action(lambda clusters: print_matrix(to_matrix(clusters), lambda x: x.weight)) \
-            .map(lambda x: None)
+            .do_action(lambda clusters: print_matrix(to_matrix(clusters), lambda x: x.weight)) 
+            .scan(lambda acc, x: find_nearest_clusters([c[1] for c in acc if c[1] is not None], x), seed=initial_state)
+            .flat_map(lambda x: x)
+            .map(map_to_event)
             .where(lambda x: x is not None) 
         )
