@@ -1,8 +1,15 @@
 import * as Highcharts from 'highcharts';
 import DoormanMasterClient from '../services/DoormanMasterClient';
-import template from './HistoricDashboard.mustache';
+import statsTemplate from './HistoricDashboardStats.mustache';
+import headerTemplate from './HistoricDashboardHeader.mustache';
+import URL from 'url-parse';
+import * as moment from 'moment';
 
 require('highcharts/modules/series-label')(Highcharts);
+
+function formatDate(dt) {
+    return dt.toISOString().replace(/T/, ' ').replace(/\..+/, ' ');
+}
 
 // selectors constants
 // --------------------
@@ -10,6 +17,7 @@ const CLS_OCCUPANCY_FILTER_START = '.occupancy-filter-start';
 const CLS_OCCUPANCY_FILTER_END = '.occupancy-filter-end';
 const CLS_OCCUPANCY_FILTER_BUTTON = '.occupancy-filter-btn';
 const CLS_OCCUPANCY_STATS = '.occupancy-stats-view';
+const CLS_OCCUPANCY_HEADER = '.occupancy-header-view';
 const CLS_OCCUPANCY_CHART = '.occupancy-chart';
 
 // util functions
@@ -36,19 +44,32 @@ function getDateValue(element) {
 // HistoricDashboard
 // --------------------
 class HistoricDashboard {
-    constructor($el, client) {
-        this.$el = $el;
+    constructor($element, roomID, client) {
+        this.$el = $element;
+        this._roomID = roomID;
         this._client = client;
+
+        this._onLoad();
     }
 
-    onLoad() {
-        const filterBtn = this.$el.find(CLS_OCCUPANCY_FILTER_BUTTON);
+    _onLoad() {
+        this._chart = this._createChart();
 
-        this._renderStatsView(null);
+        this._client.fetchRoom(this._roomID)
+            .catch((e) => {
+                alert(`Failed to lookup room ${this._roomID}`);
+                console.log(e);
+                throw e;
+            })
+            .then((room) => {
+                const filterBtn = this.$el.find(CLS_OCCUPANCY_FILTER_BUTTON);
 
-        filterBtn.on('click', () => {
-            this._onFilter();
-        });
+                filterBtn.on('click', () => {
+                    this._onFilter();
+                });
+
+                this._renderHeaderView(room);
+            });
     }
 
     _onFilter() {
@@ -60,21 +81,43 @@ class HistoricDashboard {
             return;
         }
 
-        this._client.fetchHistoricStats(0, start, end)
+        this._client.fetchHistoricStats(this._roomID, start, end)
             .then((x) => {
                 return toStringObjectValues(x);
             })
             .then((x) => {
                 this._renderStatsView(x)
             });
+
+        this._client.fetchHistoricTrendData(this._roomID, start, end)
+            .then((x) => {
+                this._renderChartView(x.points || []);
+            });
+    }
+
+    _renderHeaderView(room) {
+        const html = headerTemplate(room || {});
+
+        const element = this.$el.find(CLS_OCCUPANCY_HEADER);
+
+        element.html(html);
     }
 
     _renderStatsView(stats) {
-        const html = template(stats || {});
+        stats = {
+            ...stats,
+            maxDate: moment(stats.maxDate).format('YYYY-MM-DD HH:mm')
+        };
+
+        const html = statsTemplate(stats || {});
 
         const element = this.$el.find(CLS_OCCUPANCY_STATS);
 
         element.html(html);
+    }
+
+    _renderChartView(data) {
+        this._updateChartPoints(data);
     }
 
     _getFilterStart() {
@@ -89,19 +132,37 @@ class HistoricDashboard {
         return getDateValue(element);
     }
 
-    _createChart(categories, data) {
+    _updateChartPoints(points) {
+        const data = points
+            .map(x => [
+                new Date(x.timestamp).getTime(),
+                x.occupancyCount
+            ]);
+
+        const series = this._chart.series[0];
+        
+        series.setData(data);
+    }
+
+    _createChart() {
         const element = this.$el.find(CLS_OCCUPANCY_CHART);
+        const offset = new Date().getTimezoneOffset();
 
         return new Highcharts.Chart({
             chart: {
                 renderTo: element[0],
-                type: 'spline',
+                defaultSeriesType: 'spline',
             },
             title: {
-                text: 'Historic Occupancy Trend'
+                text: 'Realtime Occupancy'
             },
             xAxis: {
-                categories: categories
+                type: 'datetime',
+                tickPixelInterval: 150,
+                minRange: 20000,
+            },
+            time: {
+                getTimezoneOffset: () => offset
             },
             yAxis: {
                 minPadding: 0.2,
@@ -112,7 +173,7 @@ class HistoricDashboard {
             },
             series: [{
                 name: 'Occupancy',
-                data: data
+                data: []
             }]
         });
     }
@@ -120,9 +181,9 @@ class HistoricDashboard {
 
 HistoricDashboard.start = function start($el) {
     const client = new DoormanMasterClient();
-    const dashboard = new HistoricDashboard($el, client);
-
-    dashboard.onLoad();
+    const roomID = new URL(location.href, true).query.roomID;
+    console.log(`Room id in HistoricDashboard - ${roomID}`);
+    const dashboard = new HistoricDashboard($el, roomID, client);
 
     return dashboard;
 }

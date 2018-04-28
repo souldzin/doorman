@@ -96,7 +96,7 @@ class RealTimeDashboard {
             timestamp: room.lastSnapshotAt
                 ? new Date(room.lastSnapshotAt).toLocaleString()
                 : "",
-            room: `${room.roomName} (ID: ${room.roomID})`
+            room: room
         });
     }
 

@@ -151,32 +151,9 @@ namespace Doorman.Master.Services
 			}
 		}
 
-		GetHistoricTrendVM IDoormanService.GetHistoricTrends(int roomId, DateTime start, DateTime end)
+		GetTrendDataVM IDoormanService.GetHistoricTrends(int roomId, DateTime start, DateTime end)
 		{
-			var result = new GetHistoricTrendVM();
-
-			try
-			{
-				var dbModels =
-					_context.RoomOccupancySnapshots.Where(x => x.RoomId == roomId).ToList();
-
-				if (!dbModels.Any())
-					return result;
-				{
-
-					var snapShot = dbModels.Where(x => x.CreateDateTime >= start && x.CreateDateTime <= end)
-						.OrderByDescending(x => x.CreateDateTime).Take(30);
-
-					result.Points = Mapper.Map<List<RoomOccupancySnapshot>, List<RoomOccupancySnapshotVM>>(snapShot.ToList());
-				}
-
-				return result;
-
-			}
-			catch (Exception ex)
-			{
-				return null;
-			}
+			return GetTrendData(roomId, start, end);
 		}
 
 		private DateTime GetEarliestTrendDate(int roomId, DateTime startAt) {
@@ -219,19 +196,19 @@ namespace Doorman.Master.Services
 				.ToList();
 		}
 
-		private List<RoomOccupancyPointVM> BuildSummaryList(IEnumerable<DateTime> times, IEnumerable<RoomOccupancyPointVM> snapshots) {
+		private List<TrendDataPointVM> BuildSummaryList(IEnumerable<DateTime> times, IEnumerable<TrendDataPointVM> snapshots) {
 			var points = times
 				.OrderBy(x => x)
-				.Select(x => new RoomOccupancyPointVM {
+				.Select(x => new TrendDataPointVM {
 					OccupancyCount = 0,
 					Timestamp = x
 				})
 				.ToList();
 
-			Console.WriteLine("POINTS");
-			Console.WriteLine(string.Join(", ", points.Select(x => x.Timestamp.ToString() + ": " + x.OccupancyCount)));
-			Console.WriteLine("SNAPSHOTS");
-			Console.WriteLine(string.Join(", ", snapshots.Select(x => x.Timestamp.ToString() + ": " + x.OccupancyCount)));
+			// Console.WriteLine("POINTS");
+			// Console.WriteLine(string.Join(", ", points.Select(x => x.Timestamp.ToString() + ": " + x.OccupancyCount)));
+			// Console.WriteLine("SNAPSHOTS");
+			// Console.WriteLine(string.Join(", ", snapshots.Select(x => x.Timestamp.ToString() + ": " + x.OccupancyCount)));
 
 			var currentPoints = points.Skip(0);
 
@@ -246,10 +223,16 @@ namespace Doorman.Master.Services
 			return points;
 		}
 
-		GetRecentTrendVM IDoormanService.GetRecentTrends(int roomId, int seconds)
+		GetTrendDataVM IDoormanService.GetRecentTrends(int roomId, int seconds)
 		{
 			var endAt = DateTime.Now;
 			var startAt = endAt.AddSeconds(-seconds);
+
+			return GetTrendData(roomId, startAt, endAt);
+		}
+
+		private GetTrendDataVM GetTrendData(int roomId, DateTime startAt, DateTime endAt) 
+		{
 			var startFilterAt = GetEarliestTrendDate(roomId, startAt);
 
 			var mostRecentAtFound = _context.RoomOccupancySnapshots
@@ -259,7 +242,7 @@ namespace Doorman.Master.Services
 
 			// If no snapshots exist, just return empty.
 			if(!mostRecentAtFound.HasValue) {
-				return new GetRecentTrendVM();
+				return new GetTrendDataVM();
 			}
 
 			var mostRecentAt = mostRecentAtFound.Value;
@@ -267,7 +250,7 @@ namespace Doorman.Master.Services
 			var mostRecentSnapshot = _context.RoomOccupancySnapshots
 				.Where(x => x.RoomId == roomId)
 				.Where(x => x.CreateDateTime >= mostRecentAt)
-				.Select(x => new RoomOccupancyPointVM {
+				.Select(x => new TrendDataPointVM {
 					Timestamp = x.CreateDateTime,
 					OccupancyCount = x.Count
 				})
@@ -285,7 +268,7 @@ namespace Doorman.Master.Services
 					x.CreateDateTime.Minute,
 					0
 				))
-				.Select(g => new RoomOccupancyPointVM {
+				.Select(g => new TrendDataPointVM {
 					Timestamp = g.Key,
 					OccupancyCount = g.Max(x => x.Count)
 				}) 
@@ -296,51 +279,31 @@ namespace Doorman.Master.Services
 			var times = GetDateTimesBetween(startAt, endAt);
 			var result = BuildSummaryList(times, snapshots);
 
-			return new GetRecentTrendVM() {
+			return new GetTrendDataVM() {
 				Points = result
 			};
 		}
 
 		GetStatVM IDoormanService.GetStats(int roomId, DateTime start, DateTime end)
 		{
+			var points = GetTrendData(roomId, start, end).Points;
 			var result = new GetStatVM();
 
-			try
+			if (!points.Any()) 
 			{
-				var dbModels =
-					_context.RoomOccupancySnapshots.Where(x => x.RoomId == roomId).ToList();
-
-				if (!dbModels.Any())
-					return result;
-				{
-
-					var snapShot = dbModels.Where(x => x.CreateDateTime >= start && x.CreateDateTime <= end)
-						.OrderByDescending(x => x.CreateDateTime).Take(30).ToList();
-
-					if (!snapShot.Any())
-						return result;
-					{
-						result.Average = Math.Round(snapShot.Average(x => x.Count), 1);
-						result.Max = snapShot.Max(x => x.Count);
-						result.MaxDate = snapShot.Max(x => x.CreateDateTime);
-
-						var peakWeekday = snapShot.GroupBy(a => a.CreateDateTime.DayOfWeek).Select(g => g.OrderByDescending(x => x.Count).First()).ToList();
-						var peakTime = snapShot.GroupBy(a => a.CreateDateTime.DayOfWeek).Select(g => g.OrderByDescending(x => x.CreateDateTime).First()).ToList();
-
-						result.PeakWeekday = peakWeekday[0].CreateDateTime.DayOfWeek.ToString();
-						result.PeakTime = peakTime[0].CreateDateTime.ToShortTimeString();
-
-						result.StandardDeviation = CalculateStandardDeviation(snapShot.Select(x => x.Count).ToList());
-					}
-				}
-
 				return result;
+			}
 
-			}
-			catch (Exception ex)
-			{
-				return null;
-			}
+			result.Average = Math.Round(points.Average(x => x.OccupancyCount), 1);
+			result.Max = points.Max(x => x.OccupancyCount);
+			result.MaxDate = points.LastOrDefault(x => x.OccupancyCount == result.Max).Timestamp;
+
+			result.PeakWeekday = result.MaxDate.DayOfWeek.ToString();
+			result.PeakTime = result.MaxDate.ToShortTimeString();
+
+			result.StandardDeviation = CalculateStandardDeviation(points.Select(x => x.OccupancyCount).ToList());
+
+			return result;
 		}
 
 		void IDoormanService.SendBroadcast(int roomId)
@@ -370,8 +333,8 @@ namespace Doorman.Master.Services
 		PostRoomOccupancySnapshotResultsVM GetRoomOccupancySnapshotById(int roomOccupancySnapshotId);
 		PostRoomResultVM RegisterRoom(string name, ClientConfigVM model);
 		GetRoomResultVM GetRoom(int roomId);
-		GetHistoricTrendVM GetHistoricTrends(int roomId, DateTime start, DateTime end);
-		GetRecentTrendVM GetRecentTrends(int roomId, int seconds);
+		GetTrendDataVM GetHistoricTrends(int roomId, DateTime start, DateTime end);
+		GetTrendDataVM GetRecentTrends(int roomId, int seconds);
 		GetStatVM GetStats(int roomId, DateTime start, DateTime end);
 		void SendBroadcast(int roomId);
 	}

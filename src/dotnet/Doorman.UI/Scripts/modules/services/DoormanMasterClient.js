@@ -36,15 +36,28 @@ class DoormanMasterClient {
         )        
     }
 
+    fetchHistoricTrendData(roomId, startDate, endDate) {
+        return (this._axios
+            .get(`/room/${roomId}/historicTrend`, {
+                params: {
+                    start: startDate,
+                    end: endDate
+                }
+            })
+            .then((x) => x.data)
+        );
+    }
+
     fetchHistoricStats(roomId, startDate, endDate) {
-        return Promise.resolve({
-            average: Math.round(Math.random() * 30 + 5),
-            stdev: Math.round(Math.random() *10 + 4),
-            max: Math.round(Math.random() * 20 + 30),
-            maxDate: new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime())),
-            peakWeekday: WEEKDAYS[Math.floor(Math.random() * WEEKDAYS.length)],
-            peakTime: `${Math.floor(Math.random()*24)}:${Math.floor(Math.random()*60)}`
-        });
+        return (this._axios
+            .get(`/room/${roomId}/stats`, {
+                params: {
+                    start: startDate,
+                    end: endDate
+                }
+            })
+            .then((x) => x.data)
+        );
     }
 
     connectToWebSocket(roomId, callback) {
