@@ -10,7 +10,7 @@ def get_random_frame():
     return [get_random_value() for x in range(0,64)]
 
 class RandomSensor:
-    def get_frames(self, scheduler):
+    def get_frames(self, scheduler=None):
         return Observable.generate_with_relative_time(0,
             lambda x: True,
             lambda x: get_random_frame(),

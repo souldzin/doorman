@@ -7,7 +7,7 @@ class AMG88xxSensor:
         self._sensor = Adafruit_AMG88xx()
         time.sleep(0.1)
 
-    def get_frames(self, scheduler):
+    def get_frames(self, scheduler=None):
         return Observable.generate_with_relative_time(0,
             lambda x: True,
             lambda x: self._sensor.readPixels(),
