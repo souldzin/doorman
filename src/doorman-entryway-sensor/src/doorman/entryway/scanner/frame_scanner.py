@@ -56,6 +56,7 @@ class FrameCluster:
         self.x_delta = 0
         self.y_delta = 0
         self.weight_delta = 0
+        self.max_weight = 0
         self.life = 0
         self.orig = None
         self.type = None
@@ -65,6 +66,7 @@ class FrameCluster:
         self.y_delta = cluster_a.y_delta / 1.5 + (self.y - cluster_a.y)
         self.weight_delta = cluster_a.weight_delta / 2 + (self.weight - cluster_a.weight) / 2
         self.orig = cluster_a.get_orig().increment()
+        self.max_weight = max(self.weight, cluster_a.max_weight)
         return self
 
     def increment(self):
@@ -277,7 +279,7 @@ def find_clusters(frame):
 def is_exit(c):
     orig = c.get_orig()
 
-    if c.type != EXIT and c.x_max > 5 and c.x_delta > 0:
+    if c.max_weight > 5 and c.type != EXIT and c.x_max > 5 and c.x_delta > 0:
         orig.type = EXIT
         return True
 
@@ -289,7 +291,7 @@ def is_enter(c_from, c_to):
 
     orig = c_from.get_orig()
 
-    if orig.type != ENTER and orig.life > 3 and orig.x_min > 5 and c_from.x_delta < 0:
+    if c_from.max_weight > 5 and orig.type != ENTER and orig.life > 3 and orig.x_min > 5 and c_from.x_delta < 0:
         orig.type = ENTER
         return True
 
