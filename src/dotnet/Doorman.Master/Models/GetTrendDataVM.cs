@@ -6,14 +6,14 @@ using Newtonsoft.Json;
 
 namespace Doorman.Master.Models
 {
-    public class GetRecentTrendVM
-	{
-		public GetRecentTrendVM()
-		{
-			Points = new List<RoomOccupancyPointVM>();
+    public class GetTrendDataVM
+    {
+	    public GetTrendDataVM()
+	    {
+			Points = new List<TrendDataPointVM>();
 		}
 
 		[JsonProperty(PropertyName = "points")]
-		public List<RoomOccupancyPointVM> Points { get; set; }
+		public List<TrendDataPointVM> Points { get; set; }
     }
 }

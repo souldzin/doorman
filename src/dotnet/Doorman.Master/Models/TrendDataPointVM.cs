@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace Doorman.Master.Models
 {
-    public class RoomOccupancyPointVM
+    public class TrendDataPointVM
     {
 	    [JsonProperty(PropertyName = "occupancyCount")]
 	    public int OccupancyCount { get; set; }

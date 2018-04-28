@@ -162,7 +162,7 @@ def get_cluster_distance(a, b):
     a_weight = a.get_next_weight()
 
     pos_distance = math.sqrt((a_x - b.x) ** 2 + (a_y - b.y) ** 2)
-    weight_distance = abs(a_weight - b.weight) / a_weight
+    weight_distance = abs(a_weight - b.weight) / max(1, a_weight)
     weight_factor = 1 + min(weight_distance, 2)
 
     return pos_distance * weight_factor
