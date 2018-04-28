@@ -182,7 +182,6 @@ def find_nearest_clusters(prev_clusters, next_clusters):
       4. For each remaining next cluster
         a. Add (None, next_cluster) pair
     """
-    print("finding nearest clusters...")
     result = []
     prev_clusters_len = len(prev_clusters)
     next_clusters_len = len(next_clusters)
@@ -322,7 +321,6 @@ class FrameScanner:
 
         return (frames
             .map(find_clusters)
-            .do_action(lambda clusters: print_matrix(to_matrix(clusters), lambda x: x.weight)) 
             .scan(lambda acc, x: find_nearest_clusters([c[1] for c in acc if c[1] is not None], x), seed=initial_state)
             .flat_map(lambda x: x)
             .map(map_to_event)
