@@ -28,6 +28,7 @@ def log(msg):
         print("")
 
 def log_error(e):
+    print("An error occurred!")
     log("Unexpected error occurred {0}".format(e))
     traceback.print_exc()
 
@@ -35,6 +36,7 @@ def main():
     arg_endpoint = sys.argv[1] if len(sys.argv) > 1 else None
     arg_sensor_type = sys.argv[2] if len(sys.argv) > 2 else TYPE_REAL
     arg_sensor_arg = sys.argv[3] if len(sys.argv) > 3 else None
+    is_debug = "--debug" in sys.argv
 
     if(not arg_endpoint):
         print("An error occurred! Expected the 'endpoint' argument.")
@@ -50,25 +52,21 @@ def main():
     print("Starting scanner...")
     scanner = FrameScanner()
 
-    frames = sensor.get_frames(scheduler)
+    frames = sensor.get_frames(scheduler = scheduler)
     events = scanner.scan(frames)
 
+    if is_debug:
+        print("subscribing to frames...")
+        frames.subscribe(
+            on_next = lambda x: client.post_frame(x),
+            on_completed = lambda: log("completed frames"),
+            on_error = log_error
+        )
+
     print("subscribing to events...")
-    events.subscribe(
-        on_next = lambda x: client.post_event(x['type'], x['delta']),
-        on_completed = lambda: log("completed events"),
-        on_error = log_error
-    )
+    last_event = events.map(lambda x: client.post_event(x['type'], x['delta'])).to_blocking().last()
 
-    print("subscribing to frames...")
-    frames.subscribe(
-        on_next = lambda x: client.post_frame(x),
-        on_completed = lambda: log("completed frames"),
-        on_error = log_error
-    )
-
-    scheduler.executor.shutdown()
-
+    print("completed.")
 
 if __name__ == '__main__':
     main()
