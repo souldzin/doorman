@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const DoormanMasterClient = require('./services/DoormanMasterClient');
+const DoormanMasterClientFake = require('./services/DoormanMasterClientFake');
+const { args, ARG_MASTER } = require('./settings-args');
 
 const VAR_DOORMAN_ROOM_MONITOR_CONFIG = "DOORMAN_ROOM_MONITOR_CONFIG";
 const DEFAULT_CONFIG_FILE_PATH = "./config/doorman.config.json";
@@ -31,38 +33,73 @@ function saveConfigFile(settings) {
     return settings;
 }
 
-function injectRoomId(settings) {
-    if(settings.roomID) {
-        return Promise.resolve(settings);
+function updateConfigFile(ctx, configSettings) {
+    // are we running without a master?
+    if(!ctx.settings[ARG_MASTER]) {
+        return;
     }
+    // is the conifg already up to date?
+    if(ctx.settings.roomID === configSettings.roomID) {
+        return;
+    }
+
+    const newConfigSettings = {
+        ...configSettings,
+        roomID: ctx.settings.roomID
+    };
+
+    return saveConfigFile(newConfigSettings);
+}
+
+function getClient({ settings }) {
+    return !settings[ARG_MASTER]
+        ? new DoormanMasterClientFake()
+        : new DoormanMasterClient(settings.masterURL);
+}
+
+
+function getRoomId({ settings, client }) {
+    if(settings.roomID) {
+        return settings.roomID;
+    } else if(!settings[ARG_MASTER]) {
+        return 0;
+    } 
 
     console.log(`"roomID" not found in settings. Fetching from server.`);
 
-    const client = new DoormanMasterClient(settings.masterURL);
     const name = settings.roomName || `New Room (${new Date()})`;
 
     return client
         .postRoom(settings.clientId, settings.clientSecret, name)
-        .then(room => {
-            return saveConfigFile({
-                ...settings,
-                roomID: room.roomID
-            });
-        });
-}
-
-function injectPort(settings) {
-    return Object.assign({}, settings, {
-        port: Number(settings.port || process.argv[2] || 9000)
-    });
+        .then(room => room.roomID);
 }
 
 function load() {
-    const settings = readConfigFile();
+    const configSettings = readConfigFile();
+    const settings = Object.assign({}, configSettings, args);
+    const ctx = {
+        settings
+    };
 
-    return Promise.resolve(settings)
-        .then(injectRoomId)
-        .then(injectPort);
+    return Promise.resolve(ctx)
+        .then((ctx) => Promise.resolve(getClient(ctx))
+            .then(client => ({ 
+                ...ctx,
+                client
+            }))
+        )
+        .then((ctx) => Promise.resolve(getRoomId(ctx))
+            .then(roomID => ({
+                ...ctx,
+                settings: {
+                    ...ctx.settings,
+                    roomID
+                }
+            }))
+        )
+        .then((ctx) => Promise.resolve(updateConfigFile(ctx, configSettings))
+            .then(() => ctx)
+        );
 }
 
 module.exports = {

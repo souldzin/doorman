@@ -13,17 +13,6 @@ Settings.load()
     .then(setup)
     .then(start);
 
-function setupClient(ctx) {
-    const {settings} = ctx;
-
-    const client = new DoormanMasterClient(settings.masterURL);
-
-    return {
-        ...ctx,
-        client
-    };
-}
-
 function setupRoomMonitor(ctx) {
     const {client, settings} = ctx;
 
@@ -42,10 +31,8 @@ function setupRoomMonitor(ctx) {
         });
 }
 
-function setup(settings) {
-    return Promise.resolve({ settings })
-        .then(setupClient)
-        .then(setupRoomMonitor);
+function setup(ctx) {
+    return setupRoomMonitor(ctx);
 }
 
 function start(ctx) {

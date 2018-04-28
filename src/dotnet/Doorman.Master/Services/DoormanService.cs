@@ -135,11 +135,12 @@ namespace Doorman.Master.Services
 					_context.RoomOccupancySnapshots.Where(x => x.RoomId == dbModel.RoomId);
 
 				if (!dbModels.Any())
-					return result;
 				{
-					var snapShot = dbModels.OrderByDescending(x => x.CreateDateTime).First();
-					Mapper.Map<RoomOccupancySnapshot, GetRoomResultVM>(snapShot, result);
+					return result;
 				}
+
+				var snapShot = dbModels.OrderByDescending(x => x.CreateDateTime).First();
+				Mapper.Map<RoomOccupancySnapshot, GetRoomResultVM>(snapShot, result);
 
 				return result;
 
@@ -178,33 +179,119 @@ namespace Doorman.Master.Services
 			}
 		}
 
+		private DateTime GetEarliestTrendDate(int roomId, DateTime startAt) {
+			var earliest = _context.RoomOccupancySnapshots
+				.Where(x => x.RoomId == roomId)
+				.Where(x => x.CreateDateTime <= startAt)
+				.Select(x => (DateTime?)x.CreateDateTime)
+				.Max();
+
+			if(!earliest.HasValue) {
+				return startAt;
+			} else {
+				return earliest.Value;
+			}
+		}
+
+		private List<DateTime> GetDateTimesBetween(DateTime startAt, DateTime endAt) {
+			var maxPoints = 30;
+			var interval = (endAt.Ticks - startAt.Ticks)/maxPoints;
+			var times = new List<DateTime>(maxPoints);
+
+			for(int i = 1; i < maxPoints; i++) {
+				times.Add(startAt.AddTicks(i * interval));
+			}
+
+			var rounded = times
+				.Select(x => new DateTime(
+					x.Year,
+					x.Month,
+					x.Day,
+					x.Hour,
+					x.Minute,
+					0
+				))
+				.Distinct();
+
+			return new [] { startAt }
+				.Concat(rounded)
+				.Concat(new [] { endAt })
+				.ToList();
+		}
+
+		private List<RoomOccupancyPointVM> BuildSummaryList(IEnumerable<DateTime> times, IEnumerable<RoomOccupancyPointVM> snapshots) {
+			var points = times
+				.OrderBy(x => x)
+				.Select(x => new RoomOccupancyPointVM {
+					OccupancyCount = 0,
+					Timestamp = x
+				})
+				.ToList();
+
+			Console.WriteLine("POINTS");
+			Console.WriteLine(string.Join(", ", points.Select(x => x.Timestamp.ToString() + ": " + x.OccupancyCount)));
+			Console.WriteLine("SNAPSHOTS");
+			Console.WriteLine(string.Join(", ", snapshots.Select(x => x.Timestamp.ToString() + ": " + x.OccupancyCount)));
+
+			var currentPoints = points.Skip(0);
+
+			foreach(var snapshot in snapshots) {
+				foreach(var point in currentPoints) {
+					if(point.Timestamp >= snapshot.Timestamp) {
+						point.OccupancyCount = snapshot.OccupancyCount;
+					}
+				}
+			}
+
+			return points;
+		}
+
 		GetRecentTrendVM IDoormanService.GetRecentTrends(int roomId, int seconds)
 		{
-			var result = new GetRecentTrendVM();
+			var endAt = DateTime.Now;
+			var startAt = endAt.AddSeconds(-seconds);
+			var startFilterAt = GetEarliestTrendDate(roomId, startAt);
 
-			try
-			{
-				var dbModels =
-					_context.RoomOccupancySnapshots.Where(x => x.RoomId == roomId).ToList();
+			var mostRecentAt = _context.RoomOccupancySnapshots
+				.Where(x => x.RoomId == roomId)
+				.Select(x => x.CreateDateTime)
+				.Max();
 
-				if (!dbModels.Any())
-					return result;
-				{
-					var currentDateTime = DateTime.Now;
-					var currentMinusSecondsDateTime = currentDateTime.AddSeconds(-seconds);
-					var snapShot = dbModels.Where(x => x.CreateDateTime >= currentMinusSecondsDateTime && x.CreateDateTime <= currentDateTime)
-						.OrderByDescending(x => x.CreateDateTime).Take(30);
+			var mostRecentSnapshot = _context.RoomOccupancySnapshots
+				.Where(x => x.RoomId == roomId)
+				.Where(x => x.CreateDateTime >= mostRecentAt)
+				.Select(x => new RoomOccupancyPointVM {
+					Timestamp = x.CreateDateTime,
+					OccupancyCount = x.Count
+				})
+				.FirstOrDefault();
 
-					result.Points = Mapper.Map<List<RoomOccupancySnapshot>, List<RoomOccupancySnapshotVM>>(snapShot.ToList());
-				}
+			var snapshots = _context.RoomOccupancySnapshots
+				.Where(x => x.RoomId == roomId)
+				.Where(x => x.CreateDateTime >= startFilterAt)
+				.Where(x => x.CreateDateTime <= endAt)
+				.GroupBy(x => new DateTime(
+					x.CreateDateTime.Year, 
+					x.CreateDateTime.Month,
+					x.CreateDateTime.Day,
+					x.CreateDateTime.Hour,
+					x.CreateDateTime.Minute,
+					0
+				))
+				.Select(g => new RoomOccupancyPointVM {
+					Timestamp = g.Key,
+					OccupancyCount = g.Max(x => x.Count)
+				}) 
+				.OrderBy(x => x.Timestamp)
+				.ToList()
+				.Concat(new [] { mostRecentSnapshot });
 
-				return result;
+			var times = GetDateTimesBetween(startAt, endAt);
+			var result = BuildSummaryList(times, snapshots);
 
-			}
-			catch (Exception ex)
-			{
-				return null;
-			}
+			return new GetRecentTrendVM() {
+				Points = result
+			};
 		}
 
 		GetStatVM IDoormanService.GetStats(int roomId, DateTime start, DateTime end)

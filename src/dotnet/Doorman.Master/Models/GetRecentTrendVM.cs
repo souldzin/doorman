@@ -10,10 +10,10 @@ namespace Doorman.Master.Models
 	{
 		public GetRecentTrendVM()
 		{
-			Points = new List<RoomOccupancySnapshotVM>();
+			Points = new List<RoomOccupancyPointVM>();
 		}
 
 		[JsonProperty(PropertyName = "points")]
-		public List<RoomOccupancySnapshotVM> Points { get; set; }
+		public List<RoomOccupancyPointVM> Points { get; set; }
     }
 }

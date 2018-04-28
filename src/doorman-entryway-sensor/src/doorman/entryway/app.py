@@ -1,12 +1,13 @@
 import sys
 import time
+import traceback
 from rx import Observable
 from rx.concurrency import ThreadPoolScheduler
 from rx.core import Scheduler
-from doorman.entryway.sensor import get_sensor
+from doorman.entryway.sensor import create_sensor
 from doorman.entryway.sensor import TYPE_REAL
 from doorman.entryway.monitor_client import MonitorClient
-from doorman.entryway.scanner import scan_frames
+from doorman.entryway.scanner import FrameScanner
 
 def print_usage():
     print(
@@ -16,59 +17,58 @@ Usage:
 
 Arguments:
   - endpoint (Example: "http://localhost:9080/frame")
-  - flag (Example: sensor | random)
+  - flag (Example: real | random | file)
 """
     )
 
 def log(msg):
     if(msg):
-        print("[log] " + str(msg))
+        print("[entryway-sensor] " + str(msg))
     else:
         print("")
 
-def post_frame(frame, url):
-    data = {
-        'frame': frame   
-    }
-
-    r = requests.post(url, json=data)
-    r.raise_for_status()
+def log_error(e):
+    log("Unexpected error occurred {0}".format(e))
+    traceback.print_exc()
 
 def main():
     arg_endpoint = sys.argv[1] if len(sys.argv) > 1 else None
     arg_sensor_type = sys.argv[2] if len(sys.argv) > 2 else TYPE_REAL
+    arg_sensor_arg = sys.argv[3] if len(sys.argv) > 3 else None
 
     if(not arg_endpoint):
         print("An error occurred! Expected the 'endpoint' argument.")
         print_usage()
         sys.exit(1)
 
-    print("Starting '{0}' sensor...".format(arg_sensor_type))
-    sensor = get_sensor(arg_sensor_type)
     client = MonitorClient(arg_endpoint)
+    scheduler = ThreadPoolScheduler(4)
 
-    scheduler = ThreadPoolScheduler(2)
+    print("Starting '{0}' sensor...".format(arg_sensor_type))
+    sensor = create_sensor(arg_sensor_type, arg_sensor_arg)
+    
+    print("Starting scanner...")
+    scanner = FrameScanner()
 
-    frames = Observable.timer(100, period=100, scheduler=scheduler) \
-        .map(lambda x: sensor.get_frame()) \
-
-    events = scan_frames(frames)
+    frames = sensor.get_frames(scheduler)
+    events = scanner.scan(frames)
 
     print("subscribing to events...")
     events.subscribe(
         on_next = lambda x: client.post_event(x['type'], x['delta']),
-        on_completed = lambda: log("completed"),
-        on_error = lambda e: log("Unexpected error occurred {0}".format(e))
+        on_completed = lambda: log("completed events"),
+        on_error = log_error
     )
 
     print("subscribing to frames...")
-    frames.observe_on(Scheduler.event_loop).subscribe(
+    frames.subscribe(
         on_next = lambda x: client.post_frame(x),
-        on_completed = lambda: log("completed"),
-        on_error = lambda e: log("Unexpected error occurred {0}".format(e))
+        on_completed = lambda: log("completed frames"),
+        on_error = log_error
     )
 
     scheduler.executor.shutdown()
+
 
 if __name__ == '__main__':
     main()
