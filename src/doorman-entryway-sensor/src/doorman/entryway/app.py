@@ -32,6 +32,15 @@ def log_error(e):
     log("Unexpected error occurred {0}".format(e))
     traceback.print_exc()
 
+def start_heartbeat(client, scheduler=None):
+    obs = Observable.timer(0, 20000, scheduler = scheduler)
+
+    return obs.subscribe(
+        on_next = lambda x: client.post_heartbeat(),
+        on_error = lambda e: log_error(e),
+        on_completed = lambda: log('completed heartbeat')
+    )
+
 def main():
     arg_endpoint = sys.argv[1] if len(sys.argv) > 1 else None
     arg_sensor_type = sys.argv[2] if len(sys.argv) > 2 else TYPE_REAL
@@ -51,6 +60,9 @@ def main():
     
     print("Starting scanner...")
     scanner = FrameScanner()
+
+    print("Starting heartbeat...")
+    start_heartbeat(client)
 
     frames = sensor.get_frames(scheduler = scheduler)
     events = scanner.scan(frames)

@@ -12,7 +12,7 @@ class AMG88xxSensor:
             lambda x: True,
             lambda x: self._sensor.readPixels(),
             lambda x: x,
-            lambda x: 50,
+            lambda x: 30,
             scheduler = scheduler
             ) \
             .skip(1)

@@ -252,10 +252,17 @@ namespace Doorman.Master.Services
 			var startAt = endAt.AddSeconds(-seconds);
 			var startFilterAt = GetEarliestTrendDate(roomId, startAt);
 
-			var mostRecentAt = _context.RoomOccupancySnapshots
+			var mostRecentAtFound = _context.RoomOccupancySnapshots
 				.Where(x => x.RoomId == roomId)
-				.Select(x => x.CreateDateTime)
+				.Select(x => (DateTime?)x.CreateDateTime)
 				.Max();
+
+			// If no snapshots exist, just return empty.
+			if(!mostRecentAtFound.HasValue) {
+				return new GetRecentTrendVM();
+			}
+
+			var mostRecentAt = mostRecentAtFound.Value;
 
 			var mostRecentSnapshot = _context.RoomOccupancySnapshots
 				.Where(x => x.RoomId == roomId)

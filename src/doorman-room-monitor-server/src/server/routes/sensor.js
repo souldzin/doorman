@@ -3,6 +3,13 @@ const express = require('express');
 module.exports = function setupSensorRouter({ monitor, io }) {
     const router = express.Router();
 
+    router.post('/heartbeat', (req, res) => {
+        io.emit('heartbeat', {});
+        console.log(`[room-monitor] - received sensor heartbeat ${new Date()}`);
+
+        res.send({});
+    });
+
     router.post("/frame", (req, res) => {
         const data = req.body || {};
 

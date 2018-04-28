@@ -11,6 +11,11 @@ class MonitorClient:
         self._base_url = base_url
         self._req = s
 
+    def post_heartbeat(self):
+        url = urljoin(self._base_url, "sensor/heartbeat")
+
+        r = self._req.post(url)
+
     def post_frame(self, frame):
         url = urljoin(self._base_url, "sensor/frame")
         data = {
