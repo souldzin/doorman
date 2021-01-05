@@ -11,7 +11,7 @@
     "start": "node src/server/index.js --port 9080"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "body-parser": "^1.18.2",
     "express": "4.16.2",
     "rxjs": "^5.5.6",
