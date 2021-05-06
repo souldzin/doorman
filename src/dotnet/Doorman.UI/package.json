@@ -17,7 +17,7 @@
   "dependencies": {
     "@aspnet/signalr-client": "1.0.0-alpha2-final",
     "axios": "^0.18.0",
-    "highcharts": "^6.0.7",
+    "highcharts": "^9.0.0",
     "hogan.js": "^3.0.2",
     "moment": "^2.22.1",
     "url-parse": "^1.2.0"
