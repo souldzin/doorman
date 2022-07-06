@@ -19,7 +19,7 @@
     "axios": "^0.18.0",
     "highcharts": "^6.0.7",
     "hogan.js": "^3.0.2",
-    "moment": "^2.22.1",
+    "moment": "^2.29.4",
     "url-parse": "^1.2.0"
   }
 }
